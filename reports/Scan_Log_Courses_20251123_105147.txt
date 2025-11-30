@@ -1,0 +1,11 @@
+TARGET FOLDER : C:\Users\sandi\Desktop\Courses
+EXECUTION TIME: 6 minutes, 14 seconds
+TOTAL FILES   : 6370
+====================================================================================================
+SOURCE FOLDER                                      | APPLICANT       | DETECTED JOB         | SMART DATE
+----------------------------------------------------------------------------------------------------
+Docs archive\v10\applications                      | Sandiso_Mazibuko | Public_Prosecutor    | 2025-10-10
+Docs archive\v10\applications                      | Sandiso_Mazibuko | Candidate_Attorney   | 2025-10-10
+Docs archive\v10\applications                      | Sandiso_Mazibuko | Candidate_Attorney   | 2025-10-10
+Docs archive\v10\applications                      | Sandiso_Mazibuko | Candidate_Attorney   | 2025-10-10
+Docs archive\v10\applications                      | Sandiso_Mazibuko | Candidate_Attorney   | 2025-10-11

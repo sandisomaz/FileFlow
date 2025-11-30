@@ -1,0 +1,9 @@
+SCAN REPORT FOR: 9
+TOTAL FILES    : 4
+====================================================================================================
+FILENAME                                           | APPLICANT       | DETECTED JOB              | SMART DATE
+----------------------------------------------------------------------------------------------------
+Cover_Letter.docx                                  | Unknown_Applicant | General_Application       | 2025-11-07
+CV.docx                                            | Unknown_Applicant | General_Application       | 2025-11-07
+Rex_Stone_Application_for_Candidate_Attorney_      | Rex_Stone       | Candidate_Attorney        | 2025-11-07
+Sandiso_Mazibuko_Application_for_Candidate_At      | Sandiso_Mazibuko | Judges_Secretary          | 2025-11-10
