@@ -253,38 +253,65 @@ class Judge:
     def _parse_slm_response(self, raw: str) -> Optional[dict]:
         """
         Extracts and validates JSON from the SLM response.
-        Handles cases where the model wraps JSON in markdown code blocks.
+        Handles:
+        1. Clean JSON responses
+        2. JSON wrapped in markdown code fences
+        3. Prose responses (qwen3 fallback) — scans for category keywords
         """
         # Strip markdown code fences if present
         cleaned = re.sub(r"```(?:json)?\s*", "", raw).strip().rstrip("`").strip()
 
         # Try to find JSON object in the response
         match = re.search(r"\{.*?\}", cleaned, re.DOTALL)
-        if not match:
-            logger.warning(f"[Judge] SLM response contained no JSON: {raw[:200]}")
-            return None
+        if match:
+            try:
+                data = json.loads(match.group())
+                category = data.get("category", "Unknown")
+                if category not in VALID_CATEGORIES:
+                    category = self._extract_category_from_prose(cleaned)
+                confidence = float(data.get("confidence", 0.5))
+                confidence = max(0.0, min(1.0, confidence))
+                reasoning = str(data.get("reasoning", "No reasoning provided"))
+                return {"category": category, "confidence": confidence, "reasoning": reasoning}
+            except json.JSONDecodeError:
+                pass
 
-        try:
-            data = json.loads(match.group())
-        except json.JSONDecodeError as e:
-            logger.warning(f"[Judge] Failed to parse SLM JSON: {e} | raw={raw[:200]}")
-            return None
+        # Prose fallback: scan the raw text for any valid category name
+        prose_category = self._extract_category_from_prose(cleaned)
+        if prose_category != "Unknown":
+            logger.debug(f"[Judge] Prose fallback extracted category: {prose_category}")
+            return {
+                "category": prose_category,
+                "confidence": 0.6,   # Lower confidence since it came from prose
+                "reasoning": f"Extracted from prose response: {raw[:120]}",
+            }
 
-        # Validate
-        category = data.get("category", "Unknown")
-        if category not in VALID_CATEGORIES:
-            logger.warning(f"[Judge] SLM returned unknown category: {category}")
-            category = "Unknown"
+        logger.warning(f"[Judge] SLM response contained no parseable category: {raw[:200]}")
+        return None
 
-        confidence = float(data.get("confidence", 0.5))
-        confidence = max(0.0, min(1.0, confidence))  # clamp to [0, 1]
-        reasoning = str(data.get("reasoning", "No reasoning provided"))
-
-        return {
-            "category": category,
-            "confidence": confidence,
-            "reasoning": reasoning,
+    @staticmethod
+    def _extract_category_from_prose(text: str) -> str:
+        """
+        Scans prose text for any valid category name.
+        Used as fallback when models don't output JSON.
+        """
+        # Direct category name match (case-insensitive)
+        for cat in ("Professional", "Life_Admin", "Education", "Development", "Waste"):
+            if re.search(rf"\b{cat}\b", text, re.IGNORECASE):
+                return cat
+        # Synonym mapping for common prose patterns
+        synonyms = {
+            "Professional": ["job application", "cv", "cover letter", "legal", "court", "attorney", "Z83"],
+            "Life_Admin":   ["bank statement", "lease", "invoice", "receipt", "personal", "financial"],
+            "Education":    ["study guide", "textbook", "exam", "course", "certificate", "transcript"],
+            "Development":  ["code", "script", "programming", "software", "project"],
+            "Waste":        ["duplicate", "empty", "corrupted", "junk", "temporary"],
         }
+        text_lower = text.lower()
+        for cat, keywords in synonyms.items():
+            if any(kw in text_lower for kw in keywords):
+                return cat
+        return "Unknown"
 
     @staticmethod
     def _fallback_prompt() -> str:

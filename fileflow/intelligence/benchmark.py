@@ -751,16 +751,44 @@ class Benchmark:
 
     @staticmethod
     def _extract_category(raw: Optional[str]) -> str:
+        """
+        Extracts a category from a model response.
+        Handles: clean JSON, markdown-fenced JSON, and prose fallback.
+        """
         if not raw:
             return "Unknown"
         import re
         import json as _json
+
         cleaned = re.sub(r"```(?:json)?\s*", "", raw).strip().rstrip("`")
+
+        # Try JSON first
         match = re.search(r"\{.*?\}", cleaned, re.DOTALL)
         if match:
             try:
                 data = _json.loads(match.group())
-                return data.get("category", "Unknown")
+                cat = data.get("category", "Unknown")
+                if cat in ("Professional", "Education", "Development", "Life_Admin", "Waste", "Unknown"):
+                    return cat
             except Exception:
                 pass
+
+        # Prose fallback: scan for category names directly
+        for cat in ("Professional", "Life_Admin", "Education", "Development", "Waste"):
+            if re.search(rf"\b{cat}\b", cleaned, re.IGNORECASE):
+                return cat
+
+        # Synonym scan
+        synonyms = {
+            "Professional": ["job application", "cv", "cover letter", "legal", "court", "attorney", "z83"],
+            "Life_Admin":   ["bank statement", "lease", "invoice", "receipt", "personal finance"],
+            "Education":    ["study guide", "textbook", "exam", "course", "certificate", "transcript"],
+            "Development":  ["code", "script", "programming", "software", "project"],
+            "Waste":        ["duplicate", "empty", "corrupted", "junk", "temporary"],
+        }
+        text_lower = cleaned.lower()
+        for cat, keywords in synonyms.items():
+            if any(kw in text_lower for kw in keywords):
+                return cat
+
         return "Unknown"
