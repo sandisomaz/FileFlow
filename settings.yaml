@@ -120,6 +120,12 @@ ai:
   # The Inspector/Memory: embeds documents for semantic search
   embed_model: "nomic-embed-text"
 
+  # The Inspector: summarises document content (can differ from slm_model)
+  summarise_model: "qwen2.5:1.5b"
+
+  # The Eye: vision model for image understanding (set by --benchmark)
+  vision_model: "moondream:latest"
+
   # Confidence threshold: below this, V8 result is escalated to the SLM
   triage_confidence_threshold: 0.7
 
