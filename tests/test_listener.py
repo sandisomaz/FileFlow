@@ -71,9 +71,15 @@ class TestListenerExtensionFilter:
         listener._enqueue(f, "created")
         assert len(listener._pending) == 0
 
-    def test_jpg_is_ignored(self, tmp_path):
+    def test_jpg_is_watched(self, tmp_path):
         listener = make_listener()
         f = tmp_path / "photo.jpg"
+        listener._enqueue(f, "created")
+        assert len(listener._pending) == 1
+
+    def test_mp3_is_ignored(self, tmp_path):
+        listener = make_listener()
+        f = tmp_path / "music.mp3"
         listener._enqueue(f, "created")
         assert len(listener._pending) == 0
 

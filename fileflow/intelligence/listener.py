@@ -32,8 +32,12 @@ logger = logging.getLogger(__name__)
 
 # File extensions the Listener cares about
 WATCHED_EXTENSIONS: Set[str] = {
+    # Documents
     ".pdf", ".docx", ".doc", ".txt", ".xlsx", ".xls",
     ".pptx", ".ppt", ".odt", ".rtf", ".csv",
+    # Images (V9 Phase 5: The Eye)
+    ".jpg", ".jpeg", ".png", ".bmp", ".tiff", ".tif",
+    ".webp", ".heic", ".heif",
 }
 
 # How long to wait after the last event before processing a burst (seconds)
@@ -98,18 +102,21 @@ class Listener:
         judge=None,
         inspector=None,
         staging_manager=None,
+        eye=None,
         debounce: float = DEBOUNCE_SECONDS,
     ):
         """
         Args:
             judge:           Optional Judge for AI classification
-            inspector:       Optional Inspector for embedding
+            inspector:       Optional Inspector for embedding documents
             staging_manager: StagingManager for V8 staging
+            eye:             Optional Eye for image intelligence (V9 Phase 5)
             debounce:        Seconds to wait before processing a burst of events
         """
         self.judge = judge
         self.inspector = inspector
         self.staging_manager = staging_manager
+        self.eye = eye
         self.debounce = debounce
         self.stats = ListenerStats()
 
@@ -297,8 +304,18 @@ class Listener:
                 self.stats.files_staged += 1
                 result["staged"] = True
 
-            # Step 2: Inspect + Embed
-            if self.inspector:
+            # Step 2a: Image → Eye pipeline
+            from fileflow.intelligence.eye import IMAGE_EXTENSIONS
+            if fp.suffix.lower() in IMAGE_EXTENSIONS and self.eye:
+                image_result = self.eye.inspect_image(fp)
+                result["summary"] = image_result.summary
+                result["category"] = image_result.category
+                result["embedded"] = image_result.embedded
+                if image_result.embedded:
+                    self.stats.files_embedded += 1
+
+            # Step 2b: Document → Inspector pipeline
+            elif self.inspector:
                 text = self._extract_text(fp)
                 inspection = self.inspector.inspect(
                     file_path=fp,

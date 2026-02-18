@@ -17,7 +17,7 @@ pdfplumber>=0.10.0     # inspector.py + listener.py: reliable PDF text extractio
 # V9 Cognition — Phase 4: The Listener
 watchdog>=3.0.0        # listener.py: cross-platform filesystem event watcher
 
-# V9 Cognition — Phase 5 (coming): The Eye
-# open-clip-torch                # image embeddings
-# imagehash                      # perceptual image dedup
-# Pillow>=10.0.0                 # image reading
+# V9 Cognition — Phase 5: The Eye
+Pillow>=10.0.0         # eye.py: image reading and preprocessing
+imagehash>=4.3.0       # eye.py: perceptual hashing for visual dedup
+pytesseract>=0.3.10    # eye.py: OCR for scanned documents (requires Tesseract binary)

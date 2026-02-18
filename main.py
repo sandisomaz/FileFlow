@@ -107,6 +107,12 @@ def main():
         action="store_true",
         help="Watch source folders for new files and auto-process them in real time"
     )
+    parser.add_argument(
+        "--scan-images",
+        action="store_true",
+        dest="scan_images",
+        help="Scan source folders for images: classify, OCR, and find visual duplicates"
+    )
     
     args = parser.parse_args()
     
@@ -295,6 +301,81 @@ def main():
 
             # Print final stats after shutdown
             console.print(f"\n[dim]{listener.stats.summary()}[/dim]")
+            return
+
+        # Handle image scan mode (--scan-images)
+        if args.scan_images:
+            from fileflow.intelligence.eye import Eye
+            from fileflow.intelligence.bridge import Bridge as _Bridge
+            from rich.table import Table
+
+            source_paths = [Path(s).resolve() for s in args.sources]
+
+            _bridge = _Bridge()
+            eye = Eye(
+                bridge=_bridge if _bridge.is_healthy() else None,
+                memory=None,  # Embed separately with --embed if desired
+            )
+
+            status = eye.status()
+            console.print(Panel.fit(
+                f"[bold magenta]\U0001f441  FileFlow Eye — Image Scanner[/bold magenta]\n"
+                f"[dim]Pillow: {'✅' if status['pillow'] else '❌'}  "
+                f"imagehash: {'✅' if status['imagehash'] else '❌'}  "
+                f"OCR: {'✅' if status['tesseract_ocr'] else '❌'}  "
+                f"Vision: {'✅' if status['vision_model'] else '❌'}[/dim]",
+                border_style="magenta",
+            ))
+
+            all_images = []
+            for source in source_paths:
+                from fileflow.intelligence.eye import IMAGE_EXTENSIONS
+                for ext in IMAGE_EXTENSIONS:
+                    all_images.extend(source.rglob(f"*{ext}"))
+                    all_images.extend(source.rglob(f"*{ext.upper()}"))
+            all_images = sorted(set(all_images))
+
+            if not all_images:
+                console.print("[yellow]No images found in the specified folders.[/yellow]")
+                return
+
+            console.print(f"\n[cyan]Found {len(all_images)} image(s). Inspecting...[/cyan]\n")
+
+            table = Table(show_header=True, header_style="bold magenta")
+            table.add_column("File", style="cyan", no_wrap=True)
+            table.add_column("Category", style="green")
+            table.add_column("Summary", style="white")
+            table.add_column("OCR", style="dim")
+            table.add_column("Hash", style="dim")
+
+            results = eye.inspect_batch(all_images)
+            for r in results:
+                ocr_preview = r.ocr_text[:40].replace("\n", " ") + "…" if r.ocr_text else "—"
+                table.add_row(
+                    r.file_path.name,
+                    r.category,
+                    r.summary[:60] if r.summary else "—",
+                    ocr_preview,
+                    r.phash[:8] + "…" if r.phash else "—",
+                )
+
+            console.print(table)
+
+            # Visual dedup report
+            if status["pillow"] and status["imagehash"]:
+                console.print("\n[bold]🔍 Visual Duplicate Check...[/bold]")
+                for source in source_paths:
+                    dupes = eye.find_visual_duplicates(source)
+                    if dupes:
+                        for d in dupes:
+                            console.print(
+                                f"  [yellow]⚠ Near-duplicate[/yellow] "
+                                f"({d.similarity_pct:.0f}% similar): "
+                                f"[cyan]{d.path_a.name}[/cyan] ↔ [cyan]{d.path_b.name}[/cyan]"
+                            )
+                    else:
+                        console.print(f"  [green]✅ No visual duplicates found in {source.name}[/green]")
+
             return
 
         dashboard = Dashboard()
