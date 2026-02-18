@@ -118,13 +118,16 @@ ai:
   slm_model: "qwen2.5:1.5b"
 
   # The Inspector/Memory: embeds documents for semantic search
+  # Benchmark winner: coherence=0.571, dim=2560 — 2x more coherent than nomic-embed-text
   embed_model: "qwen3-embedding:4b"
 
-  # The Inspector: summarises document content (can differ from slm_model)
-  summarise_model: "qwen2.5:1.5b"
+  # The Inspector: summarises document content
+  # Benchmark winner: 100% keyword coverage, 6052ms, best consistency
+  summarise_model: "smollm2:1.7b"
 
-  # The Eye: vision model for image understanding (set by --benchmark)
-  vision_model: "moondream:latest"
+  # The Eye: vision model for image understanding
+  # Benchmark winner: 57% accuracy (best available), 13687ms
+  vision_model: "granite3.2-vision:latest"
 
   # Confidence threshold: below this, V8 result is escalated to the SLM
   triage_confidence_threshold: 0.7
