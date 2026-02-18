@@ -114,3 +114,69 @@ class TestBridgeStatusReport:
             report = bridge.status_report()
         assert report["healthy"] is False
         assert "OFFLINE" in report["status"]
+
+
+class TestBridgeStripThinking:
+    """Tests for the reasoning model thinking-stream stripper."""
+
+    def test_strips_xml_think_block(self):
+        raw = "<think>Let me reason about this carefully...</think>\n{\"category\": \"Professional\"}"
+        result = Bridge._strip_thinking(raw)
+        assert "<think>" not in result
+        assert "Professional" in result
+
+    def test_strips_multiline_think_block(self):
+        raw = "<think>\nLine 1 of thinking\nLine 2 of thinking\n</think>\n{\"category\": \"Life_Admin\"}"
+        result = Bridge._strip_thinking(raw)
+        assert "<think>" not in result
+        assert "Life_Admin" in result
+
+    def test_strips_slash_think_block(self):
+        raw = "/think\nsome reasoning here\n/think\n{\"category\": \"Development\"}"
+        result = Bridge._strip_thinking(raw)
+        assert "/think" not in result
+        assert "Development" in result
+
+    def test_passthrough_when_no_think_block(self):
+        raw = "{\"category\": \"Professional\", \"confidence\": 0.9}"
+        result = Bridge._strip_thinking(raw)
+        assert result == raw
+
+    def test_fallback_when_only_think_block(self):
+        # Model produced only thinking, no final answer — return the raw text
+        raw = "<think>I cannot determine the category from this input.</think>"
+        result = Bridge._strip_thinking(raw)
+        assert result  # Should not be empty
+        assert len(result) > 0
+
+    def test_handles_empty_string(self):
+        assert Bridge._strip_thinking("") == ""
+
+    def test_handles_none_gracefully(self):
+        # _strip_thinking is called on .strip() result so None won't reach it,
+        # but test the empty-string path for safety
+        assert Bridge._strip_thinking("") == ""
+
+    def test_case_insensitive_stripping(self):
+        raw = "<THINK>uppercase think block</THINK>\n{\"category\": \"Education\"}"
+        result = Bridge._strip_thinking(raw)
+        assert "THINK" not in result.upper().replace("EDUCATION", "")
+        assert "Education" in result
+
+    def test_generate_strips_thinking_from_response(self):
+        """Integration: generate() should return clean text even from reasoning models."""
+        bridge = Bridge()
+        bridge._healthy = True
+
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            "response": "<think>Let me think step by step...</think>\n{\"category\": \"Professional\"}"
+        }
+
+        with patch("requests.post", return_value=mock_response):
+            result = bridge.generate("classify this")
+
+        assert result is not None
+        assert "<think>" not in result
+        assert "Professional" in result

@@ -33,7 +33,7 @@ class Bridge:
         base_url: str = "http://localhost:11434",
         slm_model: str = "qwen2.5:1.5b",
         embed_model: str = "nomic-embed-text",
-        timeout: int = 30,
+        timeout: int = 60,   # 60s: reasoning models (qwen3, cogito, deepseek-r1) need more time
     ):
         self.base_url = base_url.rstrip("/")
         self.slm_model = slm_model
@@ -133,6 +133,7 @@ class Bridge:
                 return None
 
             result = resp.json().get("response", "").strip()
+            result = self._strip_thinking(result)   # Remove <think>...</think> from reasoning models
             logger.debug(f"[Bridge] generate() → {len(result)} chars in {elapsed:.2f}s")
             return result
 
@@ -188,6 +189,45 @@ class Bridge:
         except Exception as e:
             logger.warning(f"[Bridge] embed() failed: {e}")
             return None
+
+    # ------------------------------------------------------------------
+    # Thinking stream stripper
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def _strip_thinking(text: str) -> str:
+        """
+        Removes reasoning model thinking streams before returning the response.
+
+        Handles formats used by:
+        - qwen3 chat models:   <think>...</think>
+        - deepseek-r1:         <think>...</think>
+        - cogito:              <think>...</think>
+        - Some variants:       /think ... /think
+
+        The thinking block is always stripped; only the final answer is returned.
+        If the model outputs ONLY a thinking block with no answer, the thinking
+        content itself is returned as a fallback so we don't lose the response.
+        """
+        import re
+
+        if not text:
+            return text
+
+        # Pattern 1: <think>...</think> (XML-style, most common)
+        cleaned = re.sub(r"<think>.*?</think>", "", text, flags=re.DOTALL | re.IGNORECASE)
+
+        # Pattern 2: /think ... /think (slash-style, some Ollama variants)
+        cleaned = re.sub(r"/think.*?/think", "", cleaned, flags=re.DOTALL | re.IGNORECASE)
+
+        cleaned = cleaned.strip()
+
+        # Fallback: if stripping left nothing, return original (model only thought, no answer)
+        if not cleaned:
+            logger.debug("[Bridge] Model produced only a thinking block — returning raw response")
+            return text.strip()
+
+        return cleaned
 
     # ------------------------------------------------------------------
     # Convenience
