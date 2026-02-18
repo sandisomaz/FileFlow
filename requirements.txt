@@ -1,5 +1,20 @@
+# V8 Core
 rich>=13.0.0
-PyPDF2>=3.0.0
+pypdf>=3.0.0
 python-dotenv==1.1.1
 typer==0.8.0
 textual>=0.40.0
+PyYAML>=6.0
+
+# V9 Cognition — Phase 1: The Brain
+requests>=2.31.0       # bridge.py: HTTP calls to Ollama
+lancedb>=0.6.0         # memory.py: local vector store
+pyarrow>=14.0.0        # memory.py: LanceDB schema dependency
+
+# V9 Cognition — Phase 2 (coming): The Inspector
+# sentence-transformers>=2.0.0   # fallback embedder if Ollama offline
+
+# V9 Cognition — Phase 5 (coming): The Eye
+# open-clip-torch                # image embeddings
+# imagehash                      # perceptual image dedup
+# Pillow>=10.0.0                 # image reading

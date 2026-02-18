@@ -80,6 +80,17 @@ def main():
         action="store_true",
         help="Run model benchmark and exit"
     )
+    parser.add_argument(
+        "--embed",
+        action="store_true",
+        help="Embed all documents in source folders into the semantic memory index"
+    )
+    parser.add_argument(
+        "--search",
+        type=str,
+        metavar="QUERY",
+        help="Search your indexed files with a natural language query"
+    )
     
     args = parser.parse_args()
     
@@ -94,7 +105,8 @@ def main():
             execute_rollback(args.rollback, force=args.force)
             return
             
-        if not args.sources or (not args.audit and not args.rollback and not args.dest):
+        if not args.sources or (not args.audit and not args.rollback and not args.dest
+                                 and not args.embed and not args.search and not args.benchmark):
             parser.print_help()
             sys.exit(1)
         
@@ -107,11 +119,81 @@ def main():
         if args.benchmark:
             from fileflow.intelligence.benchmark import Benchmark
             bench = Benchmark()
-            console.print("\n[bold cyan]📊 Running Classification Benchmark...[/bold cyan]")
+            console.print("\n[bold cyan]\U0001f4ca Running Classification Benchmark...[/bold cyan]")
             report = bench.run_classification()
-            console.print(f"\n[bold green]🏆 Winner: {report.winner}[/bold green]")
+            console.print(f"\n[bold green]\U0001f3c6 Winner: {report.winner}[/bold green]")
             console.print(f"[cyan]{report.recommendation}[/cyan]")
             bench.save_report(report)
+            return
+
+        # Handle search mode (--search "query")
+        if args.search:
+            from fileflow.intelligence.bridge import Bridge
+            from fileflow.intelligence.memory import Memory
+            from fileflow.intelligence.discovery import Discovery
+            bridge = Bridge()
+            if not bridge.is_healthy():
+                console.print("[bold red]\u26a0 Ollama is offline. Cannot perform semantic search.[/bold red]")
+                console.print("[dim]Start Ollama with: ollama serve[/dim]")
+                return
+            memory = Memory(db_path="fileflow_data/vectors.lance", bridge=bridge)
+            discovery = Discovery(bridge=bridge, memory=memory)
+            stats = discovery.stats()
+            if stats.get("total_records", 0) == 0:
+                console.print("[yellow]\u26a1 Memory index is empty. Run --embed first to index your files.[/yellow]")
+                return
+            results = discovery.search(args.search, top_k=10)
+            dashboard = Dashboard()
+            dashboard.show_search_results(discovery.format_results(results, query=args.search))
+            return
+
+        # Handle embed mode (--embed)
+        if args.embed:
+            from fileflow.intelligence.bridge import Bridge
+            from fileflow.intelligence.memory import Memory
+            from fileflow.intelligence.inspector import Inspector
+            from fileflow.intelligence.extractor import UnifiedExtractor
+            from fileflow.core.scanner import DeepScanner
+            bridge = Bridge()
+            if not bridge.is_healthy():
+                console.print("[bold red]\u26a0 Ollama is offline. Cannot embed documents.[/bold red]")
+                console.print("[dim]Start Ollama with: ollama serve[/dim]")
+                return
+            memory = Memory(db_path="fileflow_data/vectors.lance", bridge=bridge)
+            inspector = Inspector(bridge=bridge, memory=memory)
+            extractor = UnifiedExtractor()
+            scanner = DeepScanner()
+            source_paths = [Path(s).resolve() for s in args.sources]
+            console.print(f"[bold cyan]\U0001f9e0 Embedding documents from {len(source_paths)} source(s)...[/bold cyan]")
+            total_embedded = 0
+            total_skipped = 0
+            for source in source_paths:
+                files = scanner.scan(source)
+                console.print(f"  Found {len(files)} files in {source.name}")
+                for fp in files:
+                    try:
+                        text = ""
+                        if fp.suffix.lower() == ".pdf":
+                            from fileflow.staging.manager import StagingManager
+                            sm = StagingManager(extractor)
+                            text = sm._safe_extract(fp) or ""
+                        meta = extractor.extract_metadata(text, file_path=fp)
+                        result = inspector.inspect(
+                            file_path=fp,
+                            text=text,
+                            category=meta.get("ai_category", "Unknown"),
+                            sub_type=extractor.classify_sub_type(fp, text),
+                            entity=meta.get("entity", ""),
+                        )
+                        if result.embedded:
+                            total_embedded += 1
+                        else:
+                            total_skipped += 1
+                    except Exception as e:
+                        logger.warning(f"Embed failed for {fp.name}: {e}")
+                        total_skipped += 1
+            console.print(f"\n[bold green]\u2705 Embedded: {total_embedded} | Skipped (unchanged): {total_skipped}[/bold green]")
+            console.print(f"[dim]Index stored at: fileflow_data/vectors.lance[/dim]")
             return
 
         # 1. Initialize Components
