@@ -15,6 +15,7 @@ sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='repla
 sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
 
 from rich.console import Console
+from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TimeRemainingColumn, TextColumn, BarColumn
 from rich import print as rprint
 
@@ -101,6 +102,11 @@ def main():
         action="store_true",
         help="Apply smart AI-powered renaming to staged files"
     )
+    parser.add_argument(
+        "--watch",
+        action="store_true",
+        help="Watch source folders for new files and auto-process them in real time"
+    )
     
     args = parser.parse_args()
     
@@ -116,7 +122,8 @@ def main():
             return
             
         if not args.sources or (not args.audit and not args.rollback and not args.dest
-                                 and not args.embed and not args.search and not args.benchmark):
+                                 and not args.embed and not args.search and not args.benchmark
+                                 and not args.flatten and not args.watch):
             parser.print_help()
             sys.exit(1)
         
@@ -234,7 +241,64 @@ def main():
             return
 
 
+        # Handle watch mode (--watch)
+        if args.watch:
+            from fileflow.intelligence.listener import Listener
+            from fileflow.intelligence.bridge import Bridge
+            from fileflow.intelligence.memory import Memory
+            from fileflow.intelligence.inspector import Inspector
+            from fileflow.intelligence.extractor import UnifiedExtractor as _UE
+            from fileflow.staging.manager import StagingManager as _SM
+
+            source_paths = [Path(s).resolve() for s in args.sources]
+
+            # Initialise the AI stack
+            _bridge = Bridge()
+            _inspector = None
+            _staging = None
+
+            if _bridge.is_healthy():
+                _memory = Memory(db_path="fileflow_data/vectors.lance", bridge=_bridge)
+                _inspector = Inspector(bridge=_bridge, memory=_memory)
+                console.print("[bold green]\U0001f9e0 Cognition ONLINE[/bold green] — Inspector active")
+            else:
+                console.print("[yellow]\u26a1 Cognition OFFLINE[/yellow] — Watching without embedding")
+
+            _extractor = _UE()
+            _staging = _SM(_extractor)
+
+            def _on_event(event):
+                icon = "\u2705" if not event.result.get("error") else "\u274c"
+                summary = event.result.get("summary", "")
+                console.print(
+                    f"  {icon} [cyan]{event.file_path.name}[/cyan] "
+                    f"[dim]{event.event_type}[/dim]"
+                    + (f" — {summary[:60]}" if summary else "")
+                )
+
+            listener = Listener(
+                inspector=_inspector,
+                staging_manager=_staging,
+                debounce=2.0,
+            )
+
+            console.print(Panel.fit(
+                f"[bold cyan]\U0001f441  FileFlow Listener — ACTIVE[/bold cyan]\n"
+                f"[dim]Watching {len(source_paths)} folder(s). Press Ctrl+C to stop.[/dim]",
+                border_style="cyan",
+            ))
+            for sp in source_paths:
+                console.print(f"  \U0001f4c2 [dim]{sp}[/dim]")
+            console.print()
+
+            listener.watch(source_paths, on_event=_on_event)
+
+            # Print final stats after shutdown
+            console.print(f"\n[dim]{listener.stats.summary()}[/dim]")
+            return
+
         dashboard = Dashboard()
+
         dashboard.display_welcome()
         
         config = ConfigLoader()

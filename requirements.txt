@@ -11,8 +11,11 @@ requests>=2.31.0       # bridge.py: HTTP calls to Ollama
 lancedb>=0.6.0         # memory.py: local vector store
 pyarrow>=14.0.0        # memory.py: LanceDB schema dependency
 
-# V9 Cognition — Phase 2 (coming): The Inspector
-# sentence-transformers>=2.0.0   # fallback embedder if Ollama offline
+# V9 Cognition — Phase 2: The Inspector
+pdfplumber>=0.10.0     # inspector.py + listener.py: reliable PDF text extraction
+
+# V9 Cognition — Phase 4: The Listener
+watchdog>=3.0.0        # listener.py: cross-platform filesystem event watcher
 
 # V9 Cognition — Phase 5 (coming): The Eye
 # open-clip-torch                # image embeddings
