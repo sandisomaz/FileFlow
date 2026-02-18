@@ -91,6 +91,16 @@ def main():
         metavar="QUERY",
         help="Search your indexed files with a natural language query"
     )
+    parser.add_argument(
+        "--flatten",
+        action="store_true",
+        help="Flatten deeply nested folders into a staging area (max depth: 2)"
+    )
+    parser.add_argument(
+        "--rename",
+        action="store_true",
+        help="Apply smart AI-powered renaming to staged files"
+    )
     
     args = parser.parse_args()
     
@@ -196,7 +206,34 @@ def main():
             console.print(f"[dim]Index stored at: fileflow_data/vectors.lance[/dim]")
             return
 
-        # 1. Initialize Components
+        # Handle flatten mode (--flatten)
+        if args.flatten:
+            from fileflow.operations.unpacker import Unpacker
+            from fileflow.operations.executor import AtomicExecutor as _Executor
+            source_paths = [Path(s).resolve() for s in args.sources]
+            staging = Path(args.dest).resolve() if args.dest else source_paths[0].parent / "_Flattened"
+            unpacker = Unpacker(max_depth=2)
+            all_proposals = []
+            for source in source_paths:
+                console.print(f"[cyan]Analysing nesting in {source.name}...[/cyan]")
+                report = unpacker.analyse(source, staging)
+                console.print(unpacker.summarise(report))
+                all_proposals.extend(report.proposals)
+            if not all_proposals:
+                console.print("[bold green]\u2705 Nothing to flatten.[/bold green]")
+                return
+            if not args.force and not args.execute:
+                console.print(f"\n[yellow]Dry-run mode. Use --execute to apply {len(all_proposals)} moves.[/yellow]")
+                return
+            executor = _Executor(dry_run=not args.execute)
+            moved = 0
+            for proposal in all_proposals:
+                if executor.safe_copy(proposal.source, proposal.destination):
+                    moved += 1
+            console.print(f"\n[bold green]\u2705 Flattened {moved} files to {staging}[/bold green]")
+            return
+
+
         dashboard = Dashboard()
         dashboard.display_welcome()
         
