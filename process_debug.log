@@ -1,0 +1,166 @@
+[DEBUG] Starting process for 108_Rex_Stone_CV.pdf
+[DEBUG] Joined process (alive=False)
+[DEBUG] Got result from queue
+[DEBUG] Starting process for 10_Rex_Stone_Cover_Letter.pdf
+[DEBUG] Joined process (alive=False)
+[DEBUG] Got result from queue
+[DEBUG] Starting process for 110_Rex_Stone_CV.pdf
+[DEBUG] Joined process (alive=False)
+[DEBUG] Got result from queue
+[DEBUG] Starting process for 1171_Rex_Stone_Z83_Stamped.pdf
+[DEBUG] Joined process (alive=False)
+[DEBUG] Got result from queue
+[DEBUG] Starting process for 1763_Rex_Stone_Z83_Stamped.pdf
+[DEBUG] Joined process (alive=True)
+[DEBUG] KILLING stuck process 1763_Rex_Stone_Z83_Stamped.pdf
+[DEBUG] Process killed
+[DEBUG] Starting process for 108_Rex_Stone_CV.pdf
+[DEBUG] Joined process (alive=False)
+[DEBUG] Got result from queue
+[DEBUG] Calculating MD5 for 108_Rex_Stone_CV.pdf
+[DEBUG] MD5 Complete for 108_Rex_Stone_CV.pdf
+[DEBUG] Starting process for 10_Rex_Stone_Cover_Letter.pdf
+[DEBUG] Joined process (alive=False)
+[DEBUG] Got result from queue
+[DEBUG] Calculating MD5 for 10_Rex_Stone_Cover_Letter.pdf
+[DEBUG] MD5 Complete for 10_Rex_Stone_Cover_Letter.pdf
+[DEBUG] Starting process for 110_Rex_Stone_CV.pdf
+[DEBUG] Joined process (alive=False)
+[DEBUG] Got result from queue
+[DEBUG] Calculating MD5 for 110_Rex_Stone_CV.pdf
+[DEBUG] MD5 Complete for 110_Rex_Stone_CV.pdf
+[DEBUG] Starting process for 1171_Rex_Stone_Z83_Stamped.pdf
+[DEBUG] Joined process (alive=False)
+[DEBUG] Got result from queue
+[DEBUG] Calculating MD5 for 1171_Rex_Stone_Z83_Stamped.pdf
+[DEBUG] MD5 Complete for 1171_Rex_Stone_Z83_Stamped.pdf
+[DEBUG] Starting process for 1763_Rex_Stone_Z83_Stamped.pdf
+[DEBUG] Joined process (alive=True)
+[DEBUG] KILLING stuck process 1763_Rex_Stone_Z83_Stamped.pdf
+[DEBUG] Process killed
+[DEBUG] Calculating MD5 for 1763_Rex_Stone_Z83_Stamped.pdf
+[DEBUG] MD5 Complete for 1763_Rex_Stone_Z83_Stamped.pdf
+[DEBUG] ENTER stage_file for 108_Rex_Stone_CV.pdf
+[DEBUG] Starting process for 108_Rex_Stone_CV.pdf
+[DEBUG] Joined process (alive=False)
+[DEBUG] Got result from queue
+[DEBUG] Calculating MD5 for 108_Rex_Stone_CV.pdf
+[DEBUG] MD5 Complete for 108_Rex_Stone_CV.pdf
+[DEBUG] EXIT stage_file for 108_Rex_Stone_CV.pdf
+[DEBUG] ENTER stage_file for 10_Rex_Stone_Cover_Letter.pdf
+[DEBUG] Starting process for 10_Rex_Stone_Cover_Letter.pdf
+[DEBUG] Joined process (alive=False)
+[DEBUG] Got result from queue
+[DEBUG] Calculating MD5 for 10_Rex_Stone_Cover_Letter.pdf
+[DEBUG] MD5 Complete for 10_Rex_Stone_Cover_Letter.pdf
+[DEBUG] EXIT stage_file for 10_Rex_Stone_Cover_Letter.pdf
+[DEBUG] ENTER stage_file for 110_Rex_Stone_CV.pdf
+[DEBUG] Starting process for 110_Rex_Stone_CV.pdf
+[DEBUG] Joined process (alive=False)
+[DEBUG] Got result from queue
+[DEBUG] Calculating MD5 for 110_Rex_Stone_CV.pdf
+[DEBUG] MD5 Complete for 110_Rex_Stone_CV.pdf
+[DEBUG] EXIT stage_file for 110_Rex_Stone_CV.pdf
+[DEBUG] ENTER stage_file for 1171_Rex_Stone_Z83_Stamped.pdf
+[DEBUG] Starting process for 1171_Rex_Stone_Z83_Stamped.pdf
+[DEBUG] Joined process (alive=False)
+[DEBUG] Got result from queue
+[DEBUG] Calculating MD5 for 1171_Rex_Stone_Z83_Stamped.pdf
+[DEBUG] MD5 Complete for 1171_Rex_Stone_Z83_Stamped.pdf
+[DEBUG] EXIT stage_file for 1171_Rex_Stone_Z83_Stamped.pdf
+[DEBUG] ENTER stage_file for 1763_Rex_Stone_Z83_Stamped.pdf
+[DEBUG] Starting process for 1763_Rex_Stone_Z83_Stamped.pdf
+[DEBUG] Joined process (alive=True)
+[DEBUG] KILLING stuck process 1763_Rex_Stone_Z83_Stamped.pdf
+[DEBUG] Process killed
+[DEBUG] Calculating MD5 for 1763_Rex_Stone_Z83_Stamped.pdf
+[DEBUG] MD5 Complete for 1763_Rex_Stone_Z83_Stamped.pdf
+[DEBUG] ENTER stage_file for 108_Rex_Stone_CV.pdf
+[DEBUG] Starting process for 108_Rex_Stone_CV.pdf
+[DEBUG] Joined process (alive=False)
+[DEBUG] Got result from queue
+[DEBUG] Calculating MD5 for 108_Rex_Stone_CV.pdf
+[DEBUG] MD5 Complete for 108_Rex_Stone_CV.pdf
+[DEBUG] EXIT stage_file for 108_Rex_Stone_CV.pdf
+[DEBUG] ENTER stage_file for 10_Rex_Stone_Cover_Letter.pdf
+[DEBUG] Starting process for 10_Rex_Stone_Cover_Letter.pdf
+[DEBUG] Joined process (alive=False)
+[DEBUG] Got result from queue
+[DEBUG] Calculating MD5 for 10_Rex_Stone_Cover_Letter.pdf
+[DEBUG] MD5 Complete for 10_Rex_Stone_Cover_Letter.pdf
+[DEBUG] EXIT stage_file for 10_Rex_Stone_Cover_Letter.pdf
+[DEBUG] ENTER stage_file for 110_Rex_Stone_CV.pdf
+[DEBUG] Starting process for 110_Rex_Stone_CV.pdf
+[DEBUG] Joined process (alive=False)
+[DEBUG] Got result from queue
+[DEBUG] Calculating MD5 for 110_Rex_Stone_CV.pdf
+[DEBUG] MD5 Complete for 110_Rex_Stone_CV.pdf
+[DEBUG] EXIT stage_file for 110_Rex_Stone_CV.pdf
+[DEBUG] ENTER stage_file for 1171_Rex_Stone_Z83_Stamped.pdf
+[DEBUG] Starting process for 1171_Rex_Stone_Z83_Stamped.pdf
+[DEBUG] Joined process (alive=False)
+[DEBUG] Got result from queue
+[DEBUG] Calculating MD5 for 1171_Rex_Stone_Z83_Stamped.pdf
+[DEBUG] MD5 Complete for 1171_Rex_Stone_Z83_Stamped.pdf
+[DEBUG] EXIT stage_file for 1171_Rex_Stone_Z83_Stamped.pdf
+[DEBUG] ENTER stage_file for 1763_Rex_Stone_Z83_Stamped.pdf
+[DEBUG] Starting process for 1763_Rex_Stone_Z83_Stamped.pdf
+[DEBUG] Joined process (alive=True)
+[DEBUG] KILLING stuck process 1763_Rex_Stone_Z83_Stamped.pdf
+[DEBUG] Process killed
+[DEBUG] Calculating MD5 for 1763_Rex_Stone_Z83_Stamped.pdf
+[DEBUG] MD5 Complete for 1763_Rex_Stone_Z83_Stamped.pdf
+[DEBUG] EXIT stage_file for 1763_Rex_Stone_Z83_Stamped.pdf
+[DEBUG] ENTER stage_file for 1764_Rex_Stone_Z83_Stamped.pdf
+[DEBUG] Starting process for 1764_Rex_Stone_Z83_Stamped.pdf
+[DEBUG] Joined process (alive=True)
+[DEBUG] KILLING stuck process 1764_Rex_Stone_Z83_Stamped.pdf
+[DEBUG] Process killed
+[DEBUG] Calculating MD5 for 1764_Rex_Stone_Z83_Stamped.pdf
+[DEBUG] MD5 Complete for 1764_Rex_Stone_Z83_Stamped.pdf
+[DEBUG] EXIT stage_file for 1764_Rex_Stone_Z83_Stamped.pdf
+[DEBUG] ENTER stage_file for 17_Rex_Stone_CV.pdf
+[DEBUG] Starting process for 17_Rex_Stone_CV.pdf
+[DEBUG] Joined process (alive=False)
+[DEBUG] Got result from queue
+[DEBUG] Calculating MD5 for 17_Rex_Stone_CV.pdf
+[DEBUG] MD5 Complete for 17_Rex_Stone_CV.pdf
+[DEBUG] EXIT stage_file for 17_Rex_Stone_CV.pdf
+[DEBUG] ENTER stage_file for 190_Rex_Stone_Z83_Stamped.pdf
+[DEBUG] Starting process for 190_Rex_Stone_Z83_Stamped.pdf
+[DEBUG] Joined process (alive=False)
+[DEBUG] Got result from queue
+[DEBUG] Calculating MD5 for 190_Rex_Stone_Z83_Stamped.pdf
+[DEBUG] MD5 Complete for 190_Rex_Stone_Z83_Stamped.pdf
+[DEBUG] EXIT stage_file for 190_Rex_Stone_Z83_Stamped.pdf
+[DEBUG] ENTER stage_file for 1st semster_~$ads of Argument.docx
+[DEBUG] EXIT stage_file (GHOST) for 1st semster_~$ads of Argument.docx
+[DEBUG] ENTER stage_file for 1_Rex_Stone_Cover_Letter.pdf
+[DEBUG] Starting process for 1_Rex_Stone_Cover_Letter.pdf
+[DEBUG] Joined process (alive=False)
+[DEBUG] Got result from queue
+[DEBUG] Calculating MD5 for 1_Rex_Stone_Cover_Letter.pdf
+[DEBUG] MD5 Complete for 1_Rex_Stone_Cover_Letter.pdf
+[DEBUG] EXIT stage_file for 1_Rex_Stone_Cover_Letter.pdf
+[DEBUG] ENTER stage_file for 2023+Web+Dev+Syllabus.pdf
+[DEBUG] Starting process for 2023+Web+Dev+Syllabus.pdf
+[DEBUG] Joined process (alive=False)
+[DEBUG] Got result from queue
+[DEBUG] Calculating MD5 for 2023+Web+Dev+Syllabus.pdf
+[DEBUG] MD5 Complete for 2023+Web+Dev+Syllabus.pdf
+[DEBUG] EXIT stage_file for 2023+Web+Dev+Syllabus.pdf
+[DEBUG] ENTER stage_file for 2140_Rex_Stone_Z83_Stamped.pdf
+[DEBUG] Starting process for 2140_Rex_Stone_Z83_Stamped.pdf
+[DEBUG] Joined process (alive=True)
+[DEBUG] KILLING stuck process 2140_Rex_Stone_Z83_Stamped.pdf
+[DEBUG] Process killed
+[DEBUG] Calculating MD5 for 2140_Rex_Stone_Z83_Stamped.pdf
+[DEBUG] MD5 Complete for 2140_Rex_Stone_Z83_Stamped.pdf
+[DEBUG] EXIT stage_file for 2140_Rex_Stone_Z83_Stamped.pdf
+[DEBUG] ENTER stage_file for 220_Sandiso_Mazibuko_Z83_Form.pdf
+[DEBUG] Starting process for 220_Sandiso_Mazibuko_Z83_Form.pdf
+[DEBUG] Joined process (alive=True)
+[DEBUG] KILLING stuck process 220_Sandiso_Mazibuko_Z83_Form.pdf
+[DEBUG] Process killed
+[DEBUG] Calculating MD5 for 220_Sandiso_Mazibuko_Z83_Form.pdf
+[DEBUG] MD5 Complete for 220_Sandiso_Mazibuko_Z83_Form.pdf

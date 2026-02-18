@@ -1,56 +1,177 @@
 {
   "ignore": {
-    "filenames": [".ds_store", "thumbs.db"],
-    "extensions": [".tmp", ".lnk"],
-    "patterns": ["~\\$"]
+    "filenames": [
+      ".ds_store",
+      "thumbs.db",
+      "desktop.ini"
+    ],
+    "extensions": [
+      ".tmp",
+      ".lnk",
+      ".log",
+      ".bak"
+    ],
+    "patterns": [
+      "~\\$",
+      "^\\."
+    ]
   },
   "categories": {
     "Invoices": {
       "priority": 10,
-      "regex_keywords": ["inv-\\d{4,}", "invoice_no_\\d+"],
-      "extensions": [".pdf"],
+      "regex_keywords": [
+        "inv-\\d{4,}",
+        "invoice_no_\\d+"
+      ],
+      "extensions": [
+        ".pdf"
+      ],
       "description": "Financial invoices with specific naming patterns"
     },
     "Job_Applications": {
       "priority": 11,
-      "keywords": ["cv", "resume", "cover letter", "application", "job", "hiring", "portfolio", "linkedin"],
-      "extensions": [".pdf", ".docx", ".doc"],
+      "keywords": [
+        "cv",
+        "resume",
+        "cover letter",
+        "application",
+        "job",
+        "hiring",
+        "portfolio",
+        "linkedin",
+        "z83"
+      ],
+      "extensions": [
+        ".pdf",
+        ".docx",
+        ".doc"
+      ],
       "description": "CVs, resumes, cover letters, and job-related documents"
     },
     "School_Work": {
       "priority": 1,
-      "keywords": ["assignment", "homework", "essay", "project", "lecture", "notes", "study", "exam", "quiz", "thesis", "research"],
-      "extensions": [".pdf", ".docx", ".doc", ".pptx", ".ppt", ".txt", ".mp3", ".m4a"],
+      "keywords": [
+        "assignment",
+        "homework",
+        "essay",
+        "project",
+        "lecture",
+        "notes",
+        "study",
+        "exam",
+        "quiz",
+        "thesis",
+        "research"
+      ],
+      "extensions": [
+        ".pdf",
+        ".docx",
+        ".doc",
+        ".pptx",
+        ".ppt",
+        ".txt",
+        ".mp3",
+        ".m4a"
+      ],
       "description": "Academic work, assignments, and study materials"
     },
     "Code_Files": {
       "priority": 1,
-      "keywords": ["code", "script", "program", "app", "project", "source"],
-      "extensions": [".py", ".js", ".java", ".cpp", ".c", ".html", ".css", ".json", ".xml", ".php", ".rb", ".go"],
+      "keywords": [
+        "code",
+        "script",
+        "program",
+        "app",
+        "project",
+        "source"
+      ],
+      "extensions": [
+        ".py",
+        ".js",
+        ".java",
+        ".cpp",
+        ".c",
+        ".html",
+        ".css",
+        ".json",
+        ".xml",
+        ".php",
+        ".rb",
+        ".go"
+      ],
       "description": "Programming and development files"
     },
     "Images": {
       "priority": 1,
-      "keywords": ["photo", "image", "picture", "screenshot", "snap"],
-      "extensions": [".jpg", ".jpeg", ".png", ".gif", ".bmp", ".svg", ".webp", ".ico", ".psd"],
+      "keywords": [
+        "photo",
+        "image",
+        "picture",
+        "screenshot",
+        "snap"
+      ],
+      "extensions": [
+        ".jpg",
+        ".jpeg",
+        ".png",
+        ".gif",
+        ".bmp",
+        ".svg",
+        ".webp",
+        ".ico",
+        ".psd"
+      ],
       "description": "Photos, images, and screenshots"
     },
     "Spreadsheets": {
       "priority": 1,
-      "keywords": ["data", "sheet", "budget", "expense", "financial", "report"],
-      "extensions": [".xlsx", ".xls", ".csv"],
+      "keywords": [
+        "data",
+        "sheet",
+        "budget",
+        "expense",
+        "financial",
+        "report"
+      ],
+      "extensions": [
+        ".xlsx",
+        ".xls",
+        ".csv"
+      ],
       "description": "Excel files and spreadsheets"
     },
     "Documents": {
       "priority": 0,
-      "keywords": ["document", "letter", "report", "manual", "guide"],
-      "extensions": [".pdf", ".docx", ".doc", ".txt", ".rtf"],
+      "keywords": [
+        "document",
+        "letter",
+        "report",
+        "manual",
+        "guide"
+      ],
+      "extensions": [
+        ".pdf",
+        ".docx",
+        ".doc",
+        ".txt",
+        ".rtf"
+      ],
       "description": "General documents (lower priority)"
     },
     "Archives": {
       "priority": 1,
-      "keywords": ["archive", "backup", "compressed"],
-      "extensions": [".zip", ".rar", ".7z", ".tar", ".gz"],
+      "keywords": [
+        "archive",
+        "backup",
+        "compressed"
+      ],
+      "extensions": [
+        ".zip",
+        ".rar",
+        ".7z",
+        ".tar",
+        ".gz"
+      ],
       "description": "Compressed and archived files"
     }
   },
@@ -58,6 +179,8 @@
     "organize_by_date": true,
     "date_format": "%Y-%m",
     "handle_duplicates": "rename",
-    "log_moves": true
+    "log_moves": true,
+    "scan_depth": 10,
+    "dry_run_default": true
   }
 }

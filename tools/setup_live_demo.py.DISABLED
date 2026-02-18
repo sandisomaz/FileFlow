@@ -1,0 +1,89 @@
+import shutil
+import random
+from pathlib import Path
+from typing import List
+
+# Configuration
+SOURCE_DIR = Path(r"C:\Users\sandi\Desktop\FINAL_PROFESSIONAL_ARCHIVE")
+DEMO_DIR = Path(r"C:\Users\sandi\Desktop\LIVE_DEMO_CHAOS")
+TARGET_COUNT = 50
+
+def setup_demo():
+    print(f"🎬 Preparing Live Demo Environment...")
+    print(f"   Source: {SOURCE_DIR}")
+    print(f"   Target: {DEMO_DIR}")
+
+    if not SOURCE_DIR.exists():
+        print(f"❌ Error: Source directory not found!")
+        return
+
+    # 1. Clean Slate
+    if DEMO_DIR.exists():
+        print(f"   🧹 Cleaning previous demo data...")
+        shutil.rmtree(DEMO_DIR)
+    DEMO_DIR.mkdir(parents=True)
+
+    # 2. Gather Candidates
+    print(f"   🔍 Scouting for files...")
+    all_files = []
+    # We prioritize these folders for the "Best Impression"
+    priority_folders = ["CANDIDATE_ATTORNEY", "JUDGES_SECRETARY", "LEGAL_ADVISOR"]
+    
+    for folder in SOURCE_DIR.iterdir():
+        if folder.is_dir() and folder.name != "_Quarantine":
+            # Boost weight for priority folders
+            weight = 3 if folder.name in priority_folders else 1
+            for f in folder.glob("*.pdf"):
+                all_files.extend([f] * weight) # Weighted probability
+
+    if not all_files:
+        print("❌ No files found in archive!")
+        return
+
+    # 3. Select & Flatten
+    print(f"   🎲 Selecting {TARGET_COUNT} representative files...")
+    # Remove duplicates from our weighting hack before sampling
+    unique_pool = list(set(all_files))
+    
+    # Increase sample pool to account for corrupt files
+    sample_size = min(len(unique_pool), TARGET_COUNT * 2) 
+    selected_files = random.sample(unique_pool, sample_size)
+
+    success_count = 0
+    import pypdf # Ensure we only pick valid files
+    
+    for src in selected_files:
+        try:
+            # Pre-flight Check: Is it a valid PDF?
+            if src.stat().st_size == 0: continue
+            
+            try:
+                with open(src, 'rb') as f:
+                    if f.read(4) != b'%PDF': raise Exception("Bad Header")
+                pypdf.PdfReader(src) # Will raise if corrupt
+            except:
+                print(f"      ❌ Skipping corrupt source: {src.name}")
+                continue
+
+            # Flatten: Copy directly to root of DEMO_DIR
+            dst = DEMO_DIR / src.name
+            
+            # Handle duplicates
+            if dst.exists():
+                dst = DEMO_DIR / f"Copy_{random.randint(100,999)}_{src.name}"
+            shutil.copy2(src, dst)
+            success_count += 1
+            print(f"      + Copied: {src.name[:40]}...")
+            
+            if success_count >= TARGET_COUNT:
+                break
+                
+        except Exception as e:
+            print(f"      ⚠️ Failed to copy {src.name}: {e}")
+
+    print(f"\n✅ Demo Setup Complete!")
+    print(f"   📂 {success_count} files are ready in: {DEMO_DIR}")
+    print(f"   👉 Run your demo command on this folder.")
+
+if __name__ == "__main__":
+    setup_demo()

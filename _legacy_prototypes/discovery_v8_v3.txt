@@ -1,0 +1,8 @@
+﻿+--------------------------------+
+| FileFlow Enterprise            |
+| Forensic Reconstruction Engine |
++--------------------------------+
+
+Phase 2: Deep Scan
+Scanning: C:\Users\sandi\Desktop\Courses
+

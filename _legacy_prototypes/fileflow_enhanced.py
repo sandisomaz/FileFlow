@@ -56,7 +56,7 @@ class PDFExtractor:
                 metadata['position'] = 'Legal_Admin_Officer'
             else:
                 # Fallback: extract from text
-                pos_pattern = r'(?:Position|POSITION).*?:\s*([A-Z\s&:]+?)(?:\n|Department)'
+                pos_pattern = r'(?:Position|POSITION).*?:\s*([A-Za-z\s&:]+?)(?:\n|Department)'
                 pos_match = re.search(pos_pattern, text)
                 if pos_match:
                     metadata['position'] = pos_match.group(1).strip().replace(' ', '_').replace('&', 'and')

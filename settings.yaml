@@ -1,0 +1,108 @@
+# FileFlow V8 Configuration
+# Single source of truth for all settings
+
+system:
+  version: "8.0.0"
+  output_folder_prefix: "_FileFlow_Final_Clean"
+  forensic_manifest_name: "Forensic_Manifest.json"
+  
+paths:
+  # Recommended: Use short root paths to avoid MAX_PATH
+  default_output: "C:/Users/sandi/Desktop/Courses/_FileFlow_Final_Clean_V8"
+  reports_folder: "reports"
+  
+scanning:
+  max_depth: 10
+  target_extensions:
+    - .pdf
+    - .docx
+    - .doc
+  ignored_dirs:
+    - .venv
+    - venv
+    - env
+    - __pycache__
+    - .git
+    - node_modules
+    - .vscode
+    - site-packages
+    - reports
+    - _Organized_Output
+    - _FileFlow_Final_Clean_V7
+    - _FileFlow_Final_Clean_V8
+  
+classification:
+  keywords_negative:
+    - statement
+    - invoice
+    - receipt
+    - lease
+    - agreement
+    - contract
+    - payment
+    - study guide
+    - textbook
+    - exam
+    - tutorial
+    - assignment
+    - transcript
+    - ticket
+    - cheque
+    - curriculum_plan
+    - id_copy
+    - matric
+    - template
+    - flyer
+    - udemy
+    - course resource
+  
+  # Applicant name patterns
+  known_applicants:
+    - name: "Sandiso Mazibuko"
+      patterns:
+        - sandiso
+        - mazibuko
+    - name: "Rex Stone"
+      patterns:
+        - rex
+        - stone
+  
+  # Law firm patterns
+  law_firms:
+    - ENS
+    - WEBBER
+    - BOWMANS
+    - CLIFFE
+    - DEKKER
+    - HOFMEYR
+    - WERKSMANS
+    - NORTON
+    - ROSE
+    - FASKEN
+    - HOGAN
+    - LOVELLS
+    - MACROBERT
+    - ADAMS
+    - SPOOR
+    - FISHER
+    - STRAUSS
+    - DALY
+    - ATTORNEYS
+    - INC
+    - LAW
+
+versioning:
+  format: "{entity}_{subtype}_{date}_v{index}{ext}"
+  date_format: "%Y%m%d"
+  duplicate_suffix: "DUP"
+  max_filename_length: 200
+  
+deduplication:
+  method: "content_hash"
+  normalize_text: true
+  
+execution:
+  dry_run_default: true
+  verify_copies: true
+  atomic_operations: true
+  log_level: "INFO"

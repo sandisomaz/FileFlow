@@ -1,0 +1,42 @@
+==================================================
+      FILEFLOW LEVEL 2 FORENSIC AUDIT REPORT      
+      Run Date: 
+==================================================
+
+SUMMARY:
+  Total Files Scanned: 6928
+  Total Data Size:    5.3 GB
+
+TOP 10 EXTENSIONS:
+  .pdf      : 4054 files
+  .docx     : 2874 files
+
+TOP 10 HEAVIEST FOLDERS:
+  [ 333 files] C:\Users\sandi\Desktop\Courses\Docs archive\v10\applications
+  [ 269 files] C:\Users\sandi\Desktop\Courses\_FileFlow_Staging_Area\in_a_government
+  [ 190 files] C:\Users\sandi\Desktop\Courses\Docs archive\V2 Files\applications\2_for_portal_submission
+  [ 153 files] C:\Users\sandi\Desktop\Courses\Docs archive\V2 Files\run_20250916_010636\_temp_pdfs
+  [ 135 files] C:\Users\sandi\Desktop\Courses\applications\_Organized_Output\Candidate_Attorney
+  [ 120 files] C:\Users\sandi\Desktop\Courses\Docs archive\v2 cvs\run_20250918_222221\_temp_pdfs
+  [ 114 files] C:\Users\sandi\Desktop\Courses\Docs archive\v2 cvs\run_20250918_222221
+  [  90 files] C:\Users\sandi\Desktop\Courses\Docs archive\V2 Files\run_20250912_181556
+  [  81 files] C:\Users\sandi\Desktop\Courses\Docs archive\v10\applications\2_for_portal_submission
+  [  79 files] C:\Users\sandi\Desktop\Courses\Docs archive\2_for_portal_submission\applications
+
+ANOMALIES (FILES > 50MB):
+  No large files detected.
+
+PATH COMPLEXITY ALERT:
+  Deep/Long Paths Detected: 203
+  [Len: 217 | Depth: 11] C:\Users\sandi\Desktop\Courses\Graphic Design\GraphicDesignMasterclass-Udemy-2022\07 - Adobe Indesign - The Portfolio Building Template\A4 Size\Pdf-Portfolio-Template-Vertical-A4\Pdf-Portfolio-Template-Vertical-A4.pdf
+  [Len: 221 | Depth: 11] C:\Users\sandi\Desktop\Courses\Graphic Design\GraphicDesignMasterclass-Udemy-2022\07 - Adobe Indesign - The Portfolio Building Template\A4 Size\Pdf-Portfolio-Template-Horizontal-A4\Pdf-Portfolio-Template-Horizontal-A4.pdf
+  [Len: 215 | Depth: 11] C:\Users\sandi\Desktop\Courses\Graphic Design\GraphicDesignMasterclass-Udemy-2022\07 - Adobe Indesign - The Portfolio Building Template\8.5x11 Size\Pdf-Portfolio-Template-Vertical\Pdf-Portfolio-Template-Vertical.pdf
+  [Len: 219 | Depth: 11] C:\Users\sandi\Desktop\Courses\Graphic Design\GraphicDesignMasterclass-Udemy-2022\07 - Adobe Indesign - The Portfolio Building Template\8.5x11 Size\Pdf-Portfolio-Template-Horizontal\Pdf-Portfolio-Template-Horizontal.pdf
+  [Len: 210 | Depth: 10] C:\Users\sandi\Desktop\Courses\Docs archive\v4\run_20250920_193835\57_DEPARTMENT_OF_JUSTICE_AND_CONSTITUTIONAL_DEVELOPMENT\CV_Sandiso_Mazibuko_for_DEPARTMENT_OF_JUSTICE_AND_CONSTITUTIONAL_DEVELOPMENT_ID-57.docx
+  [Len: 210 | Depth: 10] C:\Users\sandi\Desktop\Courses\Docs archive\v4\run_20250920_193835\54_DEPARTMENT_OF_JUSTICE_AND_CONSTITUTIONAL_DEVELOPMENT\CV_Sandiso_Mazibuko_for_DEPARTMENT_OF_JUSTICE_AND_CONSTITUTIONAL_DEVELOPMENT_ID-54.docx
+  [Len: 210 | Depth: 10] C:\Users\sandi\Desktop\Courses\Docs archive\v4\run_20250920_193835\51_DEPARTMENT_OF_JUSTICE_AND_CONSTITUTIONAL_DEVELOPMENT\CV_Sandiso_Mazibuko_for_DEPARTMENT_OF_JUSTICE_AND_CONSTITUTIONAL_DEVELOPMENT_ID-51.docx
+  [Len: 210 | Depth: 10] C:\Users\sandi\Desktop\Courses\Docs archive\v4\run_20250920_193835\50_DEPARTMENT_OF_JUSTICE_AND_CONSTITUTIONAL_DEVELOPMENT\CV_Sandiso_Mazibuko_for_DEPARTMENT_OF_JUSTICE_AND_CONSTITUTIONAL_DEVELOPMENT_ID-50.docx
+  [Len: 210 | Depth: 10] C:\Users\sandi\Desktop\Courses\Docs archive\v4\run_20250920_193835\49_DEPARTMENT_OF_JUSTICE_AND_CONSTITUTIONAL_DEVELOPMENT\CV_Sandiso_Mazibuko_for_DEPARTMENT_OF_JUSTICE_AND_CONSTITUTIONAL_DEVELOPMENT_ID-49.docx
+  [Len: 210 | Depth: 10] C:\Users\sandi\Desktop\Courses\Docs archive\v4\run_20250920_193835\48_DEPARTMENT_OF_JUSTICE_AND_CONSTITUTIONAL_DEVELOPMENT\CV_Sandiso_Mazibuko_for_DEPARTMENT_OF_JUSTICE_AND_CONSTITUTIONAL_DEVELOPMENT_ID-48.docx
+
+--- END OF REPORT ---

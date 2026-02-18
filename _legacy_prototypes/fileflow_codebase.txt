@@ -1,0 +1,3260 @@
+# FileFlow Codebase Export
+# Generated on merge_codebase.py
+
+
+================================================================================
+FILE: config.json
+================================================================================
+
+{
+  "ignore": {
+    "filenames": [".ds_store", "thumbs.db"],
+    "extensions": [".tmp", ".lnk"],
+    "patterns": ["~\\$"]
+  },
+  "categories": {
+    "Invoices": {
+      "priority": 10,
+      "regex_keywords": ["inv-\\d{4,}", "invoice_no_\\d+"],
+      "extensions": [".pdf"],
+      "description": "Financial invoices with specific naming patterns"
+    },
+    "Job_Applications": {
+      "priority": 11,
+      "keywords": ["cv", "resume", "cover letter", "application", "job", "hiring", "portfolio", "linkedin"],
+      "extensions": [".pdf", ".docx", ".doc"],
+      "description": "CVs, resumes, cover letters, and job-related documents"
+    },
+    "School_Work": {
+      "priority": 1,
+      "keywords": ["assignment", "homework", "essay", "project", "lecture", "notes", "study", "exam", "quiz", "thesis", "research"],
+      "extensions": [".pdf", ".docx", ".doc", ".pptx", ".ppt", ".txt", ".mp3", ".m4a"],
+      "description": "Academic work, assignments, and study materials"
+    },
+    "Code_Files": {
+      "priority": 1,
+      "keywords": ["code", "script", "program", "app", "project", "source"],
+      "extensions": [".py", ".js", ".java", ".cpp", ".c", ".html", ".css", ".json", ".xml", ".php", ".rb", ".go"],
+      "description": "Programming and development files"
+    },
+    "Images": {
+      "priority": 1,
+      "keywords": ["photo", "image", "picture", "screenshot", "snap"],
+      "extensions": [".jpg", ".jpeg", ".png", ".gif", ".bmp", ".svg", ".webp", ".ico", ".psd"],
+      "description": "Photos, images, and screenshots"
+    },
+    "Spreadsheets": {
+      "priority": 1,
+      "keywords": ["data", "sheet", "budget", "expense", "financial", "report"],
+      "extensions": [".xlsx", ".xls", ".csv"],
+      "description": "Excel files and spreadsheets"
+    },
+    "Documents": {
+      "priority": 0,
+      "keywords": ["document", "letter", "report", "manual", "guide"],
+      "extensions": [".pdf", ".docx", ".doc", ".txt", ".rtf"],
+      "description": "General documents (lower priority)"
+    },
+    "Archives": {
+      "priority": 1,
+      "keywords": ["archive", "backup", "compressed"],
+      "extensions": [".zip", ".rar", ".7z", ".tar", ".gz"],
+      "description": "Compressed and archived files"
+    }
+  },
+  "settings": {
+    "organize_by_date": true,
+    "date_format": "%Y-%m",
+    "handle_duplicates": "rename",
+    "log_moves": true
+  }
+}
+
+================================================================================
+FILE: create_test_pdf.py
+================================================================================
+
+from reportlab.pdfgen import canvas
+from pathlib import Path
+
+def create_dummy_pdf(filename):
+    c = canvas.Canvas(filename)
+    c.drawString(100, 750, "Position: Software Engineer")
+    c.drawString(100, 730, "Applicant: John Doe")
+    c.save()
+
+if __name__ == "__main__":
+    create_dummy_pdf("test_job.pdf")
+    print("Created test_job.pdf")
+
+
+================================================================================
+FILE: fileflow_enhanced.py
+================================================================================
+
+#!/usr/bin/env python3
+"""
+FileFlow Enhanced - Intelligent Job Application File Organizer
+Designed specifically for automating legal job application file management
+"""
+
+import argparse
+import json
+import re
+from pathlib import Path
+from typing import List, Dict, Any, Optional, Tuple
+from datetime import datetime
+import PyPDF2
+from rich.console import Console
+from rich.prompt import Prompt, Confirm
+from rich.table import Table
+from rich.panel import Panel
+
+console = Console()
+
+# ============================================================================
+# PDF METADATA EXTRACTION
+# ============================================================================
+
+class PDFExtractor:
+    """Extracts metadata from Z83 government application forms"""
+    
+    @staticmethod
+    def extract_application_metadata(pdf_path: str) -> Optional[Dict[str, str]]:
+        """
+        Extract position, department, applicant name, and reference # from Z83 PDF.
+        Returns None if extraction fails.
+        """
+        try:
+            with open(pdf_path, 'rb') as file:
+                reader = PyPDF2.PdfReader(file)
+                text = ""
+                for page in reader.pages:
+                    text += page.extract_text()
+            
+            metadata = {}
+            
+            # Extract Position (e.g., "JUDGES SECRETARY" or "STATE LAW ADVISOR: LITIGATION")
+            pos_match = re.search(
+                r'(?:Position for which you are applying|JUDGE\'S SECRETARY|STATE LAW ADVISOR|LEGAL ADMIN OFFICER)',
+                text,
+                re.IGNORECASE
+            )
+            
+            # Try structured position extraction
+            if 'JUDGE' in text.upper() and 'SECRETARY' in text.upper():
+                metadata['position'] = 'Judges_Secretary'
+            elif 'STATE LAW ADVISOR' in text.upper() and 'LITIGATION' in text.upper():
+                metadata['position'] = 'State_Law_Advisor_Litigation'
+            elif 'LEGAL ADMIN' in text.upper() and 'OFFICER' in text.upper():
+                metadata['position'] = 'Legal_Admin_Officer'
+            else:
+                # Fallback: extract from text
+                pos_pattern = r'(?:Position|POSITION).*?:\s*([A-Z\s&:]+?)(?:\n|Department)'
+                pos_match = re.search(pos_pattern, text)
+                if pos_match:
+                    metadata['position'] = pos_match.group(1).strip().replace(' ', '_').replace('&', 'and')
+                else:
+                    metadata['position'] = 'Unknown_Position'
+            
+            # Extract Department
+            dept_pattern = r'(?:Department|DEPARTMENT).*?:\s*([A-Z\s&]+?)(?:\n|Reference)'
+            dept_match = re.search(dept_pattern, text)
+            if dept_match:
+                dept = dept_match.group(1).strip()
+                # Abbreviate common departments
+                dept_abbrev = {
+                    'OFFICE OF THE CHIEF JUSTICE': 'OCJ',
+                    'HUMAN SETTLEMENTS': 'HS',
+                    'PUBLIC WORKS': 'DPWI'
+                }
+                metadata['department'] = dept_abbrev.get(dept, dept[:3].upper())
+            else:
+                metadata['department'] = 'DEPT'
+            
+            # Extract Reference Number
+            ref_pattern = r'(?:Reference number|REFERENCE).*?:\s*(\d+/\d+|\d+)'
+            ref_match = re.search(ref_pattern, text)
+            if ref_match:
+                metadata['reference'] = ref_match.group(1)
+            else:
+                metadata['reference'] = None
+            
+            # Extract Applicant Name (look for surname and full names line)
+            name_pattern = r'(?:Surname and Full names|SURNAME).*?:\s*([A-Za-z\s]+?)(?:\n|Date of Birth)'
+            name_match = re.search(name_pattern, text)
+            if name_match:
+                name = name_match.group(1).strip()
+                # Clean up name
+                name = re.sub(r'\s+', '_', name)
+                metadata['applicant'] = name
+            else:
+                # Try looking for common patterns in filename
+                metadata['applicant'] = 'Unknown_Applicant'
+            
+            return metadata if metadata.get('position') and metadata.get('applicant') != 'Unknown_Applicant' else None
+        
+        except Exception as e:
+            console.print(f"[yellow]Warning: Could not extract PDF metadata from {Path(pdf_path).name}: {e}[/yellow]")
+            return None
+
+# ============================================================================
+# PROFILE MANAGEMENT
+# ============================================================================
+
+class ProfileManager:
+    """Manages scan profiles (saved folder configurations)"""
+    
+    PROFILES_FILE = Path.home() / '.fileflow_profiles.json'
+    
+    @staticmethod
+    def load_profiles() -> Dict[str, Dict[str, Any]]:
+        """Load all saved profiles"""
+        if ProfileManager.PROFILES_FILE.exists():
+            with open(ProfileManager.PROFILES_FILE, 'r') as f:
+                return json.load(f)
+        return {}
+    
+    @staticmethod
+    def save_profiles(profiles: Dict) -> None:
+        """Save profiles to file"""
+        with open(ProfileManager.PROFILES_FILE, 'w') as f:
+            json.dump(profiles, f, indent=2)
+    
+    @staticmethod
+    def create_profile(name: str) -> Dict[str, Any]:
+        """Interactive profile creation"""
+        console.print(f"\n[bold cyan]Creating profile: {name}[/bold cyan]")
+        
+        folders = []
+        console.print("[yellow]Enter folder paths to scan (one per line, empty line to finish):[/yellow]")
+        while True:
+            folder_input = input("Folder path: ").strip()
+            if folder_input == "":
+                if folders:
+                    break
+                console.print("[red]Please enter at least one folder[/red]")
+                continue
+            
+            folder_path = Path(folder_input).expanduser()
+            if not folder_path.is_dir():
+                console.print(f"[red]Folder not found: {folder_path}[/red]")
+                continue
+            
+            folders.append(str(folder_path))
+            console.print(f"[green]✓ Added: {folder_path}[/green]")
+        
+        console.print("\n[yellow]Now entering date range...[/yellow]")
+        date_from = input("Start date (YYYY-MM-DD) [2024-01-01]: ").strip() or "2024-01-01"
+        date_to = input("End date (YYYY-MM-DD) [2025-11-22]: ").strip() or datetime.now().strftime("%Y-%m-%d")
+        
+        return {
+            "folders": folders,
+            "date_from": date_from,
+            "date_to": date_to,
+            "created": datetime.now().isoformat()
+        }
+
+# ============================================================================
+# FILE SCANNING & ORGANIZATION
+# ============================================================================
+
+class FileScanner:
+    """Scans folders for job application PDFs"""
+    
+    @staticmethod
+    def scan_folders(
+        folders: List[str],
+        date_from: str,
+        date_to: str,
+        file_types: List[str] = None
+    ) -> List[Dict[str, Any]]:
+        """Scan multiple folders for files within date range"""
+        
+        if file_types is None:
+            file_types = ['.pdf', '.docx', '.doc']
+        
+        date_from_dt = datetime.strptime(date_from, "%Y-%m-%d")
+        date_to_dt = datetime.strptime(date_to, "%Y-%m-%d")
+        
+        files = []
+        
+        for folder_str in folders:
+            folder = Path(folder_str)
+            if not folder.is_dir():
+                console.print(f"[yellow]Skipping invalid folder: {folder}[/yellow]")
+                continue
+            
+            console.print(f"[cyan]Scanning: {folder}[/cyan]")
+            
+            for file_path in folder.rglob('*'):
+                if not file_path.is_file():
+                    continue
+                
+                if file_path.suffix.lower() not in file_types:
+                    continue
+                
+                # Check date range
+                mod_time = datetime.fromtimestamp(file_path.stat().st_mtime)
+                if not (date_from_dt <= mod_time <= date_to_dt):
+                    continue
+                
+                file_info = {
+                    'path': str(file_path.resolve()),
+                    'name': file_path.name,
+                    'extension': file_path.suffix.lower(),
+                    'size': file_path.stat().st_size,
+                    'modified': mod_time,
+                    'metadata': None
+                }
+                
+                # Extract metadata if PDF
+                if file_path.suffix.lower() == '.pdf':
+                    file_info['metadata'] = PDFExtractor.extract_application_metadata(str(file_path))
+                
+                files.append(file_info)
+        
+        return files
+
+class FileOrganizer:
+    """Handles versioning and file movement"""
+    
+    @staticmethod
+    def generate_new_filename(
+        applicant: str,
+        position: str,
+        date_obj: datetime,
+        existing_count: int = 0
+    ) -> str:
+        """Generate filename: Applicant_Position_YYYYMMDD_vN.pdf"""
+        date_str = date_obj.strftime("%Y%m%d")
+        version = existing_count + 1
+        return f"{applicant}_{position}_{date_str}_v{version}.pdf"
+    
+    @staticmethod
+    def find_or_create_position_folder(base_dest: Path, position: str) -> Path:
+        """Get or create position folder"""
+        pos_folder = base_dest / position
+        pos_folder.mkdir(parents=True, exist_ok=True)
+        return pos_folder
+    
+    @staticmethod
+    def get_version_count(pos_folder: Path, applicant: str, position: str, date_str: str) -> int:
+        """Count existing versions for this applicant+position+date"""
+        pattern = f"{applicant}_{position}_{date_str}_v*.pdf"
+        existing = list(pos_folder.glob(pattern))
+        return len(existing)
+    
+    @staticmethod
+    def safe_move(src: Path, dst: Path) -> bool:
+        """Move file safely"""
+        try:
+            import shutil
+            dst.parent.mkdir(parents=True, exist_ok=True)
+            shutil.move(str(src), str(dst))
+            return True
+        except Exception as e:
+            console.print(f"[red]Error moving {src.name}: {e}[/red]")
+            return False
+
+# ============================================================================
+# LOGGING & UNDO
+# ============================================================================
+
+class MoveLogger:
+    """Track file moves for undo functionality"""
+    
+    LOG_FILE = Path.home() / '.fileflow_moves.jsonl'
+    
+    @staticmethod
+    def log_move(src: str, dst: str, position: str, applicant: str) -> None:
+        """Log a file move"""
+        entry = {
+            "timestamp": datetime.now().isoformat(),
+            "source": src,
+            "destination": dst,
+            "position": position,
+            "applicant": applicant
+        }
+        try:
+            with open(MoveLogger.LOG_FILE, 'a') as f:
+                f.write(json.dumps(entry) + '\n')
+        except Exception as e:
+            console.print(f"[yellow]Warning: Could not log move: {e}[/yellow]")
+    
+    @staticmethod
+    def get_last_moves(count: int = 10) -> List[Dict]:
+        """Get last N moves"""
+        if not MoveLogger.LOG_FILE.exists():
+            return []
+        
+        moves = []
+        with open(MoveLogger.LOG_FILE, 'r') as f:
+            for line in f:
+                try:
+                    moves.append(json.loads(line))
+                except:
+                    pass
+        
+        return moves[-count:]
+    
+    @staticmethod
+    def undo_last_move() -> bool:
+        """Undo the last move"""
+        import shutil
+        moves = MoveLogger.get_last_moves(1)
+        if not moves:
+            console.print("[yellow]No moves to undo[/yellow]")
+            return False
+        
+        move = moves[0]
+        dst = Path(move['destination'])
+        src = Path(move['source'])
+        
+        if not dst.exists():
+            console.print(f"[red]Destination file no longer exists: {dst}[/red]")
+            return False
+        
+        try:
+            src.parent.mkdir(parents=True, exist_ok=True)
+            shutil.move(str(dst), str(src))
+            console.print(f"[green]✓ Undone: {dst.name} → {src}[/green]")
+            return True
+        except Exception as e:
+            console.print(f"[red]Undo failed: {e}[/red]")
+            return False
+
+# ============================================================================
+# CLI INTERFACE
+# ============================================================================
+
+def display_file_table(files: List[Dict]) -> Table:
+    """Create a Rich table of files to organize"""
+    table = Table(title="[bold cyan]📄 Files Found for Organization[/bold cyan]", show_header=True, header_style="bold magenta")
+    table.add_column("#", style="dim", width=4)
+    table.add_column("File Name", style="bold", width=30)
+    table.add_column("Applicant", style="cyan", width=20)
+    table.add_column("Position", style="yellow", width=25)
+    table.add_column("Date Modified", width=12)
+    
+    for i, f in enumerate(files):
+        applicant = "?"
+        position = "?"
+        
+        if f.get('metadata'):
+            applicant = f['metadata'].get('applicant', '?')[:15]
+            position = f['metadata'].get('position', '?')[:20]
+        
+        table.add_row(
+            str(i),
+            f['name'][:27],
+            applicant,
+            position,
+            f['modified'].strftime('%Y-%m-%d')
+        )
+    
+    return table
+
+def preview_organization(files: List[Dict], dest_base: Path) -> List[Dict]:
+    """Show what will happen without moving files"""
+    results = []
+    
+    for f in files:
+        if not f.get('metadata'):
+            results.append({
+                'file': f['name'],
+                'destination': '[yellow]Could not extract metadata[/yellow]',
+                'reason': 'No metadata'
+            })
+            continue
+        
+        meta = f['metadata']
+        applicant = meta['applicant']
+        position = meta['position']
+        date_str = f['modified'].strftime("%Y%m%d")
+        
+        pos_folder = dest_base / position
+        existing_count = FileOrganizer.get_version_count(pos_folder, applicant, position, date_str)
+        new_filename = FileOrganizer.generate_new_filename(applicant, position, f['modified'], existing_count)
+        
+        new_path = pos_folder / new_filename
+        
+        results.append({
+            'file': f['name'],
+            'destination': str(new_path),
+            'reason': 'OK'
+        })
+    
+    return results
+
+def main():
+    parser = argparse.ArgumentParser(
+        prog="FileFlow Enhanced",
+        description="Smart job application file organizer with PDF extraction and versioning"
+    )
+    
+    subparsers = parser.add_subparsers(dest='command', help='Commands')
+    
+    # Profile commands
+    profile_parser = subparsers.add_parser('profile', help='Manage scan profiles')
+    profile_parser.add_argument('action', choices=['create', 'list', 'delete'], help='Profile action')
+    profile_parser.add_argument('name', nargs='?', help='Profile name')
+    
+    # Organize command
+    org_parser = subparsers.add_parser('organize', help='Organize files')
+    org_parser.add_argument('--profile', help='Use saved profile')
+    org_parser.add_argument('--folders', nargs='+', help='Folders to scan (overrides profile)')
+    org_parser.add_argument('--from', dest='date_from', help='Start date (YYYY-MM-DD)')
+    org_parser.add_argument('--to', dest='date_to', help='End date (YYYY-MM-DD)')
+    org_parser.add_argument('--dest', required=True, help='Destination folder')
+    org_parser.add_argument('--dry-run', action='store_true', help='Preview without moving')
+    org_parser.add_argument('--yes', action='store_true', help='Skip confirmations')
+    
+    # Undo command
+    undo_parser = subparsers.add_parser('undo', help='Undo last move')
+    undo_parser.add_argument('--last', type=int, default=1, help='Number of moves to undo')
+    
+    args = parser.parse_args()
+    
+    console.print("[bold green]🚀 FileFlow Enhanced 🚀[/bold green]\n")
+    
+    # ===== PROFILE COMMANDS =====
+    if args.command == 'profile':
+        profiles = ProfileManager.load_profiles()
+        
+        if args.action == 'list':
+            if not profiles:
+                console.print("[yellow]No profiles saved[/yellow]")
+            else:
+                table = Table(title="[bold]Saved Profiles[/bold]")
+                table.add_column("Name", style="cyan")
+                table.add_column("Folders", style="yellow")
+                table.add_column("Date Range", style="green")
+                
+                for name, profile in profiles.items():
+                    folders_str = ", ".join([Path(f).name for f in profile['folders']])
+                    date_range = f"{profile['date_from']} to {profile['date_to']}"
+                    table.add_row(name, folders_str, date_range)
+                
+                console.print(table)
+        
+        elif args.action == 'create':
+            if not args.name:
+                args.name = Prompt.ask("Profile name")
+            
+            profile = ProfileManager.create_profile(args.name)
+            profiles[args.name] = profile
+            ProfileManager.save_profiles(profiles)
+            console.print(f"[green]✓ Profile '{args.name}' created[/green]")
+        
+        elif args.action == 'delete':
+            if not args.name:
+                args.name = Prompt.ask("Profile name")
+            
+            if args.name in profiles:
+                del profiles[args.name]
+                ProfileManager.save_profiles(profiles)
+                console.print(f"[green]✓ Profile '{args.name}' deleted[/green]")
+            else:
+                console.print(f"[red]Profile '{args.name}' not found[/red]")
+    
+    # ===== ORGANIZE COMMAND =====
+    elif args.command == 'organize':
+        folders = args.folders
+        date_from = args.date_from
+        date_to = args.date_to
+        
+        # Load from profile if specified
+        if args.profile:
+            profiles = ProfileManager.load_profiles()
+            if args.profile not in profiles:
+                console.print(f"[red]Profile '{args.profile}' not found[/red]")
+                return
+            
+            profile = profiles[args.profile]
+            folders = folders or profile['folders']
+            date_from = date_from or profile['date_from']
+            date_to = date_to or profile['date_to']
+        
+        if not folders:
+            console.print("[red]No folders specified. Use --folders or --profile[/red]")
+            return
+        
+        if not date_from:
+            date_from = Prompt.ask("Start date (YYYY-MM-DD)", default="2024-01-01")
+        if not date_to:
+            date_to = Prompt.ask("End date (YYYY-MM-DD)", default=datetime.now().strftime("%Y-%m-%d"))
+        
+        dest_base = Path(args.dest).expanduser()
+        
+        # Scan
+        console.print("\n[bold]Scanning files...[/bold]")
+        files = FileScanner.scan_folders(folders, date_from, date_to)
+        
+        if not files:
+            console.print("[yellow]No files found matching criteria[/yellow]")
+            return
+        
+        console.print(f"[green]✓ Found {len(files)} files[/green]\n")
+        
+        # Display table
+        console.print(display_file_table(files))
+        
+        # Preview
+        console.print("\n[bold]Preview:[/bold]")
+        preview = preview_organization(files, dest_base)
+        
+        preview_table = Table(title="[bold cyan]Organization Plan[/bold cyan]")
+        preview_table.add_column("File", style="cyan", width=30)
+        preview_table.add_column("→ Destination", width=50)
+        
+        for item in preview[:10]:  # Show first 10
+            preview_table.add_row(item['file'][:28], item['destination'][-47:])
+        
+        if len(preview) > 10:
+            preview_table.add_row("[dim]...[/dim]", f"[dim]... and {len(preview)-10} more[/dim]")
+        
+        console.print(preview_table)
+        
+        # Confirm
+        if args.dry_run:
+            console.print("\n[bold yellow]DRY RUN MODE - No files will be moved[/bold yellow]")
+            return
+        
+        if not args.yes:
+            if not Confirm.ask(f"\n[bold]Proceed with organizing {len(files)} files?[/bold]"):
+                console.print("[yellow]Cancelled[/yellow]")
+                return
+        
+        # Execute moves
+        console.print("\n[bold]Organizing files...[/bold]\n")
+        success = 0
+        failed = 0
+        
+        for i, f in enumerate(files, 1):
+            if not f.get('metadata'):
+                console.print(f"[yellow]⊘ Skipped {f['name']} (no metadata)[/yellow]")
+                failed += 1
+                continue
+            
+            meta = f['metadata']
+            applicant = meta['applicant']
+            position = meta['position']
+            
+            pos_folder = FileOrganizer.find_or_create_position_folder(dest_base, position)
+            date_str = f['modified'].strftime("%Y%m%d")
+            existing_count = FileOrganizer.get_version_count(pos_folder, applicant, position, date_str)
+            
+            new_filename = FileOrganizer.generate_new_filename(applicant, position, f['modified'], existing_count)
+            new_path = pos_folder / new_filename
+            
+            if FileOrganizer.safe_move(Path(f['path']), new_path):
+                MoveLogger.log_move(f['path'], str(new_path), position, applicant)
+                console.print(f"[green]✓ {i}/{len(files)} {new_filename}[/green]")
+                success += 1
+            else:
+                console.print(f"[red]✗ {i}/{len(files)} {f['name']}[/red]")
+                failed += 1
+        
+        console.print(f"\n[bold green]Complete: {success} moved, {failed} failed[/bold green]")
+    
+    # ===== UNDO COMMAND =====
+    elif args.command == 'undo':
+        for _ in range(args.last):
+            MoveLogger.undo_last_move()
+    
+    else:
+        parser.print_help()
+
+if __name__ == '__main__':
+    main()
+
+================================================================================
+FILE: fileflow_genius.py
+================================================================================
+
+#!/usr/bin/env python3
+"""
+FileFlow Select (v6) - Granular Control
+Features:
+- 🎯 Interactive Folder Selection (Pick exactly which subfolders to scan)
+- 🧠 Genius Context & Date Extraction
+- ⏱️ Precision Timer & Reporting
+"""
+
+import os
+import shutil
+import re
+import time
+import argparse
+from pathlib import Path
+from typing import List, Dict, Any, Optional, Set
+from datetime import datetime
+import PyPDF2
+import json
+from rich.console import Console
+from rich.prompt import Prompt, Confirm
+from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn
+from rich.panel import Panel
+from rich.table import Table
+
+console = Console(width=100) 
+
+# ============================================================================
+# ⚙️ CONFIGURATION
+# ============================================================================
+
+IGNORED_SYSTEM_DIRS = {
+    '.venv', 'venv', 'env', '__pycache__', '.git', 'node_modules', 
+    '.vscode', 'site-packages', 'Lib', 'Scripts', 'assets', 'images', 'css', 'js',
+    'reports', '_Organized_Output', 'System Volume Information'
+}
+
+TARGET_EXTENSIONS = {'.pdf', '.docx', '.doc'}
+
+KEYWORDS_NEGATIVE = [
+    "statement", "invoice", "receipt", "lease", "agreement", 
+    "contract", "payment", "study guide", "textbook", "exam", 
+    "tutorial", "assignment", "transcript", "ticket", "cheque",
+    "curriculum_plan", "id_copy", "matric", "template", "flyer",
+    "udemy", "course resource" # Added based on your logs
+]
+
+FOLDER_JOB_MAP = {
+    "ADMINISTRATION_CLERK": "Administration_Clerk",
+    "ADMIN_CLERK": "Administration_Clerk",
+    "REGIONAL_COURT": "Regional_Court_Prosecutor",
+    "DISTRICT_COURT": "District_Court_Prosecutor",
+    "PROSECUTOR": "Public_Prosecutor",
+    "SECRETARY": "Secretary",
+    "JUDGE": "Judges_Secretary",
+    "LEGAL_ADMIN": "Legal_Admin_Officer",
+    "STATE_LAW": "State_Law_Advisor",
+    "CANDIDATE": "Candidate_Attorney",
+    "ATTORNEY": "Candidate_Attorney",
+    "INTERNSHIP": "Legal_Internship",
+    "REGISTRAR": "Registrar",
+    "CLERK": "Clerk"
+}
+
+LAW_FIRMS = [
+    "ENS", "WEBBER", "BOWMANS", "CLIFFE", "DEKKER", "HOFMEYR", 
+    "WERKSMANS", "NORTON", "ROSE", "FASKEN", "HOGAN", "LOVELLS",
+    "MACROBERT", "ADAMS", "SPOOR", "FISHER", "STRAUSS", "DALY",
+    "ATTORNEYS", "INC", "LAW"
+]
+
+# ============================================================================
+# 🧠 INTELLIGENT EXTRACTOR
+# ============================================================================
+
+class ContextExtractor:
+    @staticmethod
+    def extract_from_pdf_content(pdf_path: Path) -> Optional[Dict[str, str]]:
+        try:
+            with open(pdf_path, 'rb') as file:
+                reader = PyPDF2.PdfReader(file)
+                text = reader.pages[0].extract_text() if len(reader.pages) > 0 else ""
+            
+            text_upper = text.upper()
+            metadata = {}
+            
+            for key, value in FOLDER_JOB_MAP.items():
+                if key.replace('_', ' ') in text_upper:
+                    metadata['position'] = value
+                    break
+            
+            if "REX" in text_upper and "STONE" in text_upper: metadata['applicant'] = "Rex_Stone"
+            elif "SANDISO" in text_upper: metadata['applicant'] = "Sandiso_Mazibuko"
+            
+            return metadata if 'position' in metadata else None
+        except: return None
+
+    @staticmethod
+    def extract_date_from_string(text: str) -> Optional[datetime]:
+        match = re.search(r'(202[3-9])(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])', text)
+        if match:
+            try:
+                return datetime.strptime(match.group(0), "%Y%m%d")
+            except: pass
+        return None
+
+    @staticmethod
+    def extract_from_filename(filename: str) -> Dict[str, str]:
+        applicant = None
+        position = None
+        fname_lower = filename.lower()
+        
+        if "rex" in fname_lower: applicant = "Rex_Stone"
+        elif "sandiso" in fname_lower: applicant = "Sandiso_Mazibuko"
+        
+        for key, value in FOLDER_JOB_MAP.items():
+            if key.lower() in fname_lower:
+                position = value
+                break
+        
+        return {"applicant": applicant, "position": position}
+
+    @staticmethod
+    def analyze_path_context(file_path: Path) -> Dict[str, Any]:
+        parent = file_path.parent.name
+        grandparent = file_path.parent.parent.name
+        
+        inferred_position = None
+        inferred_date = None
+
+        for key, value in FOLDER_JOB_MAP.items():
+            if key in parent.upper():
+                inferred_position = value
+                break
+        
+        if not inferred_position:
+            for firm in LAW_FIRMS:
+                if firm in parent.upper():
+                    inferred_position = "Candidate_Attorney"
+                    break
+
+        if not inferred_position and "DEPARTMENT" in parent.upper():
+            clean_name = re.sub(r'^\d+_', '', parent)
+            inferred_position = f"App_{clean_name[:30]}"
+
+        date_found = ContextExtractor.extract_date_from_string(parent)
+        if not date_found:
+            date_found = ContextExtractor.extract_date_from_string(grandparent)
+        
+        if date_found:
+            inferred_date = date_found
+
+        return {
+            "position": inferred_position,
+            "date": inferred_date
+        }
+
+    @staticmethod
+    def get_metadata(file_path: Path) -> Dict[str, Any]:
+        final_meta = {
+            'applicant': "Unknown_Applicant",
+            'position': "General_Application",
+            'source': "default",
+            'final_date': None
+        }
+
+        name_meta = ContextExtractor.extract_from_filename(file_path.name)
+        if name_meta['applicant']: final_meta['applicant'] = name_meta['applicant']
+        if name_meta['position']: 
+            final_meta['position'] = name_meta['position']
+            final_meta['source'] = "filename"
+
+        if file_path.suffix.lower() == '.pdf':
+            pdf_meta = ContextExtractor.extract_from_pdf_content(file_path)
+            if pdf_meta:
+                if pdf_meta.get('applicant'): final_meta['applicant'] = pdf_meta['applicant']
+                if pdf_meta.get('position'): 
+                    final_meta['position'] = pdf_meta['position']
+                    final_meta['source'] = "pdf_content"
+
+        context = ContextExtractor.analyze_path_context(file_path)
+        
+        if final_meta['position'] == "General_Application" and context['position']:
+            final_meta['position'] = context['position']
+            final_meta['source'] = "folder_context"
+
+        final_meta['final_date'] = context['date']
+        
+        return final_meta
+
+# ============================================================================
+# 🔍 SCANNER
+# ============================================================================
+
+class TacticalScanner:
+    @staticmethod
+    def is_wanted_file(filename: str) -> bool:
+        name_lower = filename.lower()
+        for junk in KEYWORDS_NEGATIVE:
+            if junk in name_lower: return False
+        return True 
+
+    @staticmethod
+    def scan_folders(folders_to_scan: List[Path], root_reference: Path) -> Dict[str, List[Dict]]:
+        results = {} 
+        
+        with Progress(
+            SpinnerColumn(), 
+            TextColumn("[bold cyan]Scanning...[/bold cyan]"),
+            BarColumn(bar_width=40),
+            TextColumn("[dim]{task.description}[/dim]"),
+            console=console,
+            transient=True 
+        ) as progress:
+            task = progress.add_task("Initializing...", total=None)
+            
+            for folder in folders_to_scan:
+                for root, dirs, files in os.walk(folder, topdown=True):
+                    dirs[:] = [d for d in dirs if d not in IGNORED_SYSTEM_DIRS and not d.startswith('.')]
+                    
+                    folder_name = Path(root).name
+                    display_name = (folder_name[:30] + '..') if len(folder_name) > 30 else folder_name
+                    progress.update(task, description=f"📂 {display_name}")
+                    
+                    for filename in files:
+                        file_path = Path(root) / filename
+                        
+                        if file_path.suffix.lower() not in TARGET_EXTENSIONS: continue
+                        if not TacticalScanner.is_wanted_file(filename): continue
+
+                        try:
+                            stat = file_path.stat()
+                            phys_date = datetime.fromtimestamp(stat.st_mtime)
+                            meta = ContextExtractor.get_metadata(file_path)
+                            final_date = meta['final_date'] if meta['final_date'] else phys_date
+                            
+                            # Show relative path from the Main Root for the report
+                            try:
+                                current_sub = Path(root).relative_to(root_reference)
+                            except:
+                                current_sub = Path(root)
+
+                            folder_key = str(current_sub)
+                            
+                            if folder_key not in results: results[folder_key] = []
+                            results[folder_key].append({
+                                'path': file_path, 
+                                'name': filename,
+                                'date': final_date,
+                                'metadata': meta
+                            })
+                        except: pass
+                    
+        return results
+
+# ============================================================================
+# 📄 REPORTING & LOGGING
+# ============================================================================
+
+def format_duration(seconds: float) -> str:
+    if seconds < 60: return f"{seconds:.2f} seconds"
+    minutes, sec = divmod(seconds, 60)
+    return f"{int(minutes)} min, {int(sec)} sec"
+
+def generate_system_report(results: Dict[str, List], root_folder: Path, duration: float) -> Path:
+    report_dir = Path.cwd() / "reports"
+    report_dir.mkdir(exist_ok=True)
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    report_file = report_dir / f"Scan_Log_{root_folder.name}_{timestamp}.txt"
+    
+    total_files = sum(len(files) for files in results.values())
+    
+    with open(report_file, "w", encoding="utf-8") as f:
+        f.write(f"TARGET FOLDER : {root_folder}\n")
+        f.write(f"EXECUTION TIME: {format_duration(duration)}\n")
+        f.write(f"TOTAL FILES   : {total_files}\n")
+        f.write("="*100 + "\n")
+        f.write(f"{'SOURCE FOLDER':<50} | {'APPLICANT':<15} | {'DETECTED JOB':<25} | {'SMART DATE'}\n")
+        f.write("-" * 100 + "\n")
+        
+        sorted_folders = sorted(results.items(), key=lambda x: len(x[1]), reverse=True)
+        
+        for folder, files in sorted_folders:
+            if not files: continue
+            for file in files:
+                meta = file['metadata']
+                date_str = file['date'].strftime("%Y-%m-%d")
+                folder_short = folder[-45:] if len(folder) > 45 else folder
+                app_name = meta.get('applicant', 'Unknown')
+                job_name = meta.get('position', 'General')
+                f.write(f"{folder_short:<50} | {app_name:<15} | {job_name:<25} | {date_str}\n")
+            
+    return report_file
+
+class MoveLogger:
+    @staticmethod
+    def get_log_path() -> Path:
+        log_dir = Path.cwd() / "reports"
+        log_dir.mkdir(exist_ok=True)
+        return log_dir / "move_log.jsonl"
+
+    @staticmethod
+    def log_copy(src: Path, dst: Path, metadata: Dict) -> None:
+        log_file = MoveLogger.get_log_path()
+        entry = {
+            "timestamp": datetime.now().isoformat(),
+            "source": str(src.resolve()),
+            "destination": str(dst.resolve()),
+            "applicant": metadata.get('applicant'),
+            "position": metadata.get('position')
+        }
+        try:
+            with open(log_file, 'a', encoding="utf-8") as f:
+                f.write(json.dumps(entry) + '\n')
+        except: pass
+
+    @staticmethod
+    def undo_last_copy() -> None:
+        log_file = MoveLogger.get_log_path()
+        if not log_file.exists() or log_file.stat().st_size == 0:
+            console.print("[yellow]Undo log is empty.[/yellow]")
+            return
+
+        with open(log_file, 'r+', encoding="utf-8") as f:
+            lines = f.readlines()
+            if not lines: return
+            last_move = json.loads(lines[-1])
+            dest_path = Path(last_move['destination'])
+
+            console.print(f"Undoing: deleting [cyan]{dest_path.name}[/cyan]")
+            if Confirm.ask(f"Confirm delete?", default=False):
+                try:
+                    if dest_path.exists(): dest_path.unlink()
+                    f.seek(0)
+                    f.writelines(lines[:-1])
+                    f.truncate()
+                    console.print(f"[green]✓ Restored.[/green]")
+                except Exception as e:
+                    console.print(f"[red]Error: {e}[/red]")
+
+# ============================================================================
+# 📦 ORGANIZER
+# ============================================================================
+
+def organize_files(results: Dict[str, List], root_folder: Path):
+    output_base = root_folder / "_Organized_Output"
+    output_base.mkdir(exist_ok=True)
+    success_count = 0
+    
+    with Progress(
+        SpinnerColumn(), 
+        TextColumn("[bold green]Centralizing...[/bold green]"),
+        BarColumn(bar_width=40),
+        console=console,
+        transient=True
+    ) as progress:
+        all_files = [f for sublist in results.values() for f in sublist]
+        task = progress.add_task("Copying...", total=len(all_files))
+        
+        for f in all_files:
+            meta = f['metadata']
+            date_obj = f['date']
+            clean_job = re.sub(r'[^\w\-_]', '_', meta.get('position', 'General'))
+            dest_folder = output_base / clean_job
+            dest_folder.mkdir(parents=True, exist_ok=True)
+            
+            date_str = date_obj.strftime("%Y%m%d")
+            applicant = meta.get('applicant', 'Unknown')
+            base_name = f"{applicant}_{clean_job}_{date_str}"
+            
+            existing = list(dest_folder.glob(f"{base_name}_v*.pdf"))
+            version = len(existing) + 1
+            
+            new_name = f"{base_name}_v{version}{f['path'].suffix}"
+            dest_path = dest_folder / new_name
+            
+            try:
+                shutil.copy2(f['path'], dest_path)
+                success_count += 1
+                MoveLogger.log_copy(f['path'], dest_path, meta)
+            except: pass
+            progress.advance(task)
+            
+    return output_base, success_count
+
+# ============================================================================
+# 🎯 SELECTOR UI
+# ============================================================================
+
+def select_subfolders(root: Path) -> List[Path]:
+    """Interactive subfolder selector."""
+    all_items = [d for d in root.iterdir() if d.is_dir() and d.name not in IGNORED_SYSTEM_DIRS]
+    all_items.sort(key=lambda x: x.name)
+    
+    if not all_items:
+        return [root] # No subfolders, scan root
+
+    console.print(f"\n[bold]Found {len(all_items)} folders in {root.name}:[/bold]")
+    
+    # Create a display table
+    table = Table(show_header=False, box=None)
+    table.add_column("ID", style="cyan", justify="right")
+    table.add_column("Folder Name", style="yellow")
+    
+    for i, folder in enumerate(all_items, 1):
+        table.add_row(str(i), folder.name)
+    
+    console.print(table)
+    console.print("\n[dim]Enter numbers separated by commas (e.g. '1,3,5') or 'all'[/dim]")
+    
+    selection = Prompt.ask("Select folders to scan")
+    
+    selected_folders = []
+    if selection.lower().strip() == 'all':
+        return all_items
+    
+    try:
+        indices = [int(x.strip()) for x in selection.split(',') if x.strip().isdigit()]
+        for i in indices:
+            if 1 <= i <= len(all_items):
+                selected_folders.append(all_items[i-1])
+    except:
+        console.print("[red]Invalid selection. Scanning all.[/red]")
+        return all_items
+        
+    if not selected_folders:
+        console.print("[yellow]No selection made. Scanning root.[/yellow]")
+        return [root]
+        
+    return selected_folders
+
+# ============================================================================
+# 🚀 MAIN
+# ============================================================================
+
+def main():
+    parser = argparse.ArgumentParser(description="FileFlow Genius (v6)")
+    parser.add_argument("--undo", action="store_true", help="Undo last copy")
+    args = parser.parse_args()
+
+    console.clear()
+    console.print(Panel.fit("[bold cyan]FileFlow Select (v6)[/bold cyan]"))
+
+    if args.undo:
+        MoveLogger.undo_last_copy()
+        return
+    
+    target_str = Prompt.ask("Folder path to scan", default=r"C:\Users\sandi\Desktop\Courses")
+    if not target_str: return
+    root_folder = Path(target_str.strip('"').strip("'"))
+    
+    if not root_folder.exists():
+        console.print("[red]Folder not found[/red]")
+        return
+
+    # 1. Interactive Selection
+    folders_to_scan = select_subfolders(root_folder)
+    console.print(f"\n[green]Selected {len(folders_to_scan)} folders to process.[/green]")
+        
+    # 2. Scan
+    start_time = time.time()
+    results = TacticalScanner.scan_folders(folders_to_scan, root_folder)
+    duration = time.time() - start_time
+    
+    total_found = sum(len(files) for files in results.values())
+    
+    if total_found == 0:
+        console.print("[yellow]No relevant files found in selected folders.[/yellow]")
+        return
+        
+    report_path = generate_system_report(results, root_folder, duration)
+    
+    console.print(f"\n[bold green]✓ Found {total_found} files[/bold green] in [bold yellow]{format_duration(duration)}[/bold yellow]")
+    console.print(f"📝 System Log: [underline]{report_path.name}[/underline]")
+    
+    if Confirm.ask("\nCentralize files to '_Organized_Output'?", default=False):
+        out_folder, count = organize_files(results, root_folder)
+        console.print(f"\n[bold green]✓ Copied {count} files to:[/bold green]")
+        console.print(f"[cyan]{out_folder}[/cyan]")
+
+if __name__ == "__main__":
+    try:
+        main()
+    except KeyboardInterrupt:
+        console.print("\n[bold red]Cancelled.[/bold red]")
+
+================================================================================
+FILE: fileflow_granular.py
+================================================================================
+
+#!/usr/bin/env python3
+"""
+FileFlow Granular (v3)
+- ⏱️ High-Precision Timer added
+- 📂 Saves reports to local 'reports' folder (keeps target clean)
+- 📊 Professional System Log format
+"""
+
+import os
+import shutil
+import re
+import time
+from pathlib import Path
+from typing import List, Dict, Any, Optional
+from datetime import datetime
+import PyPDF2
+from rich.console import Console
+from rich.prompt import Prompt, Confirm
+from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn
+from rich.panel import Panel
+
+# Initialize Console with soft wrapping prevention
+console = Console(width=100) 
+
+# ============================================================================
+# ⚙️ CONFIGURATION
+# ============================================================================
+
+IGNORED_SYSTEM_DIRS = {
+    '.venv', 'venv', 'env', '__pycache__', '.git', 'node_modules', 
+    '.vscode', 'site-packages', 'Lib', 'Scripts', 'assets', 'images', 'css', 'js',
+    'reports', '_Organized_Output' # Don't scan our own output
+}
+
+TARGET_EXTENSIONS = {'.pdf', '.docx', '.doc'}
+
+KEYWORDS_POSITIVE = [
+    "cv", "resume", "curriculum", "vitae", 
+    "z83", "application", "cover", "letter", 
+    "candidate", "attorney", "judge", "secretary", 
+    "legal", "clerk", "internship", "prosecutor"
+]
+
+KEYWORDS_NEGATIVE = [
+    "statement", "invoice", "receipt", "lease", "agreement", 
+    "contract", "payment", "study guide", "textbook", "exam", 
+    "tutorial", "assignment", "transcript", "ticket", "cheque",
+    "curriculum_plan", "id_copy", "matric", "template", "flyer"
+]
+
+# ============================================================================
+# 🧠 METADATA EXTRACTION
+# ============================================================================
+
+class MetadataExtractor:
+    @staticmethod
+    def extract_from_filename(filename: str) -> Dict[str, str]:
+        applicant = "Unknown_Applicant"
+        position = "General_Application"
+        fname_lower = filename.lower()
+        
+        if "rex" in fname_lower: applicant = "Rex_Stone"
+        elif "sandiso" in fname_lower: applicant = "Sandiso_Mazibuko"
+        elif "lesedi" in fname_lower: applicant = "Lesedi"
+        
+        if "judge" in fname_lower: position = "Judges_Secretary"
+        elif "legal_admin" in fname_lower: position = "Legal_Admin_Officer"
+        elif "state_law" in fname_lower: position = "State_Law_Advisor"
+        elif "candidate" in fname_lower: position = "Candidate_Attorney"
+        elif "prosecutor" in fname_lower: position = "Public_Prosecutor"
+        elif "clerk" in fname_lower: position = "Clerk"
+        
+        return {"applicant": applicant, "position": position, "source": "filename"}
+
+    @staticmethod
+    def extract_from_pdf_content(pdf_path: Path) -> Optional[Dict[str, str]]:
+        try:
+            with open(pdf_path, 'rb') as file:
+                reader = PyPDF2.PdfReader(file)
+                text = ""
+                if len(reader.pages) > 0:
+                    text = reader.pages[0].extract_text().upper()
+            
+            metadata = {}
+            if 'JUDGE' in text and 'SECRETARY' in text: metadata['position'] = 'Judges_Secretary'
+            elif 'STATE LAW ADVISOR' in text: metadata['position'] = 'State_Law_Advisor'
+            elif 'LEGAL ADMIN' in text: metadata['position'] = 'Legal_Admin_Officer'
+            elif 'CANDIDATE' in text and 'ATTORNEY' in text: metadata['position'] = 'Candidate_Attorney'
+            else: return None 
+
+            if "REX" in text and "STONE" in text: metadata['applicant'] = "Rex_Stone"
+            elif "SANDISO" in text: metadata['applicant'] = "Sandiso_Mazibuko"
+            else: metadata['applicant'] = "Unknown_Applicant"
+            
+            metadata['source'] = "pdf_content"
+            return metadata
+        except: return None
+
+    @staticmethod
+    def get_metadata(file_path: Path) -> Dict[str, str]:
+        meta = None
+        if file_path.suffix.lower() == '.pdf':
+            meta = MetadataExtractor.extract_from_pdf_content(file_path)
+        if not meta:
+            meta = MetadataExtractor.extract_from_filename(file_path.name)
+        return meta
+
+# ============================================================================
+# 🔍 SCANNER
+# ============================================================================
+
+class TacticalScanner:
+    @staticmethod
+    def is_wanted_file(filename: str) -> bool:
+        name_lower = filename.lower()
+        for junk in KEYWORDS_NEGATIVE:
+            if junk in name_lower: return False
+        for req in KEYWORDS_POSITIVE:
+            if req in name_lower: return True
+        return False
+
+    @staticmethod
+    def scan_folder(root_folder: Path) -> Dict[str, List[Dict]]:
+        results = {} 
+        
+        with Progress(
+            SpinnerColumn(), 
+            TextColumn("[bold cyan]Scanning...[/bold cyan]"),
+            BarColumn(bar_width=40),
+            TextColumn("[dim]{task.description}[/dim]"),
+            console=console,
+            transient=True 
+        ) as progress:
+            task = progress.add_task("Initializing...", total=None)
+            
+            for root, dirs, files in os.walk(root_folder, topdown=True):
+                dirs[:] = [d for d in dirs if d not in IGNORED_SYSTEM_DIRS and not d.startswith('.')]
+                
+                folder_name = Path(root).name
+                display_name = (folder_name[:25] + '..') if len(folder_name) > 25 else folder_name
+                progress.update(task, description=f"📂 {display_name}")
+                
+                for filename in files:
+                    file_path = Path(root) / filename
+                    
+                    if file_path.suffix.lower() not in TARGET_EXTENSIONS: continue
+                    if not TacticalScanner.is_wanted_file(filename): continue
+
+                    try:
+                        stat = file_path.stat()
+                        mod_time = datetime.fromtimestamp(stat.st_mtime)
+                        meta = MetadataExtractor.get_metadata(file_path)
+                        
+                        current_sub = Path(root).relative_to(root_folder)
+                        folder_key = str(current_sub)
+                        if folder_key == ".": folder_key = "ROOT"
+                        
+                        if folder_key not in results: results[folder_key] = []
+                        results[folder_key].append({
+                            'path': file_path, 'name': filename,
+                            'modified': mod_time, 'metadata': meta
+                        })
+                    except: pass
+                    
+        return results
+
+# ============================================================================
+# 📄 REPORTING
+# ============================================================================
+
+def generate_system_report(results: Dict[str, List], root_folder: Path, duration: float) -> Path:
+    # 1. Setup Report Directory inside FileFlow (Current Working Dir)
+    report_dir = Path.cwd() / "reports"
+    report_dir.mkdir(exist_ok=True)
+    
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    report_file = report_dir / f"Scan_Log_{root_folder.name}_{timestamp}.txt"
+    
+    total_files = sum(len(files) for files in results.values())
+    
+    with open(report_file, "w", encoding="utf-8") as f:
+        # HEADER
+        f.write("================================================================================\n")
+        f.write(f"                           FILEFLOW SYSTEM SCAN LOG                             \n")
+        f.write("================================================================================\n")
+        f.write(f"TARGET FOLDER : {root_folder}\n")
+        f.write(f"SCAN DATE     : {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+        f.write(f"EXECUTION TIME: {duration:.4f} seconds\n")
+        f.write(f"TOTAL FILES   : {total_files}\n")
+        f.write("================================================================================\n\n")
+        
+        # SUMMARY
+        f.write("--------------------------------------------------------------------------------\n")
+        f.write(f"                           SOURCE FOLDER SUMMARY                                \n")
+        f.write("--------------------------------------------------------------------------------\n")
+        sorted_folders = sorted(results.items(), key=lambda x: len(x[1]), reverse=True)
+        for folder, files in sorted_folders[:10]:
+             f.write(f"[{len(files):4d} files] {folder}\n")
+        if len(sorted_folders) > 10:
+            f.write(f"... and {len(sorted_folders) - 10} more folders.\n")
+        f.write("\n")
+
+        # DETAILS
+        f.write("--------------------------------------------------------------------------------\n")
+        f.write(f"                           DETAILED FILE LISTING                                \n")
+        f.write("--------------------------------------------------------------------------------\n")
+        
+        for folder, files in sorted_folders:
+            if not files: continue
+            f.write(f"\n📂 SOURCE: {folder} ({len(files)} files)\n")
+            f.write("-" * 80 + "\n")
+            for file in files:
+                meta = file['metadata']
+                date_str = file['modified'].strftime("%Y-%m-%d")
+                # Format: Filename | Applicant | Position | Date
+                f.write(f"  • {file['name'][:46]:<48} | {meta['applicant']:<17} | {meta['position']:<20} | {date_str}\n")
+            
+    return report_file
+
+# ============================================================================
+# 📦 ORGANIZER
+# ============================================================================
+
+def organize_files(results: Dict[str, List], root_folder: Path):
+    # Create Output in the Scanned Folder
+    output_base = root_folder / "_Organized_Output"
+    output_base.mkdir(exist_ok=True)
+    success_count = 0
+    
+    with Progress(
+        SpinnerColumn(), 
+        TextColumn("[bold green]Centralizing...[/bold green]"),
+        BarColumn(bar_width=40),
+        console=console,
+        transient=True
+    ) as progress:
+        all_files = [f for sublist in results.values() for f in sublist]
+        task = progress.add_task("Copying...", total=len(all_files))
+        
+        for f in all_files:
+            meta = f['metadata']
+            dest_folder = output_base / meta['position']
+            dest_folder.mkdir(parents=True, exist_ok=True)
+            
+            date_str = f['modified'].strftime("%Y%m%d")
+            base_name = f"{meta['applicant']}_{meta['position']}_{date_str}"
+            
+            existing = list(dest_folder.glob(f"{base_name}_v*.pdf"))
+            version = len(existing) + 1
+            
+            new_name = f"{base_name}_v{version}{f['path'].suffix}"
+            dest_path = dest_folder / new_name
+            
+            try:
+                shutil.copy2(f['path'], dest_path)
+                success_count += 1
+            except: pass
+            progress.advance(task)
+            
+    return output_base, success_count
+
+# ============================================================================
+# 🚀 MAIN
+# ============================================================================
+
+def main():
+    console.clear()
+    console.print(Panel.fit("[bold cyan]FileFlow Granular (v3)[/bold cyan]"))
+    
+    target_str = Prompt.ask("Folder path to scan")
+    if not target_str: return
+    root_folder = Path(target_str.strip('"').strip("'"))
+    
+    if not root_folder.exists():
+        console.print("[red]Folder not found[/red]")
+        return
+        
+    # --- START TIMER ---
+    start_time = time.time()
+    
+    results = TacticalScanner.scan_folder(root_folder)
+    
+    # --- STOP TIMER ---
+    end_time = time.time()
+    duration = end_time - start_time
+    
+    total_found = sum(len(files) for files in results.values())
+    if total_found == 0:
+        console.print("[yellow]No files found.[/yellow]")
+        return
+        
+    # Generate Report locally
+    report_path = generate_system_report(results, root_folder, duration)
+    
+    console.print(f"\n[bold green]✓ Operation Completed[/bold green]")
+    console.print(f"⏱️ Time Taken : [bold yellow]{duration:.4f} seconds[/bold yellow]")
+    console.print(f"📂 Files Found: [bold]{total_found}[/bold]")
+    
+    console.print("\n[dim]Top 5 Sources:[/dim]")
+    sorted_folders = sorted(results.items(), key=lambda x: len(x[1]), reverse=True)[:5]
+    for folder, files in sorted_folders:
+        console.print(f" • [cyan]{folder[:50]}[/cyan]: {len(files)}")
+
+    console.print(f"\n📄 System Log saved to: [underline]{report_path}[/underline]")
+    console.print("[dim](This file is in your FileFlow/reports folder)[/dim]")
+    
+    if Confirm.ask("\nCentralize files to '_Organized_Output'?", default=False):
+        out_folder, count = organize_files(results, root_folder)
+        console.print(f"\n[bold green]✓ Copied {count} files to:[/bold green]")
+        console.print(f"[cyan]{out_folder}[/cyan]")
+
+if __name__ == "__main__":
+    main()
+
+================================================================================
+FILE: fileflow_optimized.py
+================================================================================
+
+#!/usr/bin/env python3
+"""
+FileFlow Strict - Intelligent Legal Job Application Organizer
+Features:
+1. Strict Filtering (Ignores bank statements, ebooks, etc.)
+2. Report Generation (Saves scan_results.txt instead of spamming console)
+3. Smart Versioning
+"""
+
+import os
+import shutil
+import re
+from pathlib import Path
+from typing import List, Dict, Any, Optional
+from datetime import datetime
+import PyPDF2
+from rich.console import Console
+from rich.prompt import Prompt, Confirm
+from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn
+
+console = Console()
+
+# ============================================================================
+# ⚙️ CONFIGURATION - THE FILTERING RULES
+# ============================================================================
+
+# 1. Folders to IGNORE completely
+IGNORED_DIRS = {
+    '.venv', 'venv', 'env', '__pycache__', '.git', 'node_modules', 
+    '.vscode', 'site-packages', 'Lib', 'Scripts', 'System Volume Information'
+}
+
+# 2. File Extensions to scan
+TARGET_EXTENSIONS = {'.pdf', '.docx', '.doc'}
+
+# 3. STRICT KEYWORDS: File MUST contain one of these to be considered
+REQUIRED_KEYWORDS = [
+    "cv", "resume", "curriculum", "vitae", 
+    "z83", "application", "cover", "letter", 
+    "candidate", "attorney", "judge", "secretary", "legal"
+]
+
+# 4. JUNK WORDS: If file has these, IGNORE IT (Bank statements, etc.)
+JUNK_KEYWORDS = [
+    "statement", "invoice", "receipt", "lease", "agreement", 
+    "contract", "payment", "study guide", "textbook", "exam", 
+    "tutorial", "assignment", "transcript", "ticket"
+]
+
+# ============================================================================
+# 🧠 METADATA INTELLIGENCE
+# ============================================================================
+
+class MetadataExtractor:
+    @staticmethod
+    def extract_from_filename(filename: str) -> Dict[str, str]:
+        """Guess details from filename."""
+        applicant = "Unknown_Applicant"
+        position = "General_Application"
+        fname_lower = filename.lower()
+        
+        # 1. Detect Applicant
+        if "rex" in fname_lower and "stone" in fname_lower:
+            applicant = "Rex_Stone"
+        elif "sandiso" in fname_lower:
+            applicant = "Sandiso_Mazibuko"
+        
+        # 2. Detect Position
+        if "judge" in fname_lower:
+            position = "Judges_Secretary"
+        elif "legal_admin" in fname_lower:
+            position = "Legal_Admin_Officer"
+        elif "state_law" in fname_lower:
+            position = "State_Law_Advisor"
+        elif "candidate" in fname_lower:
+            position = "Candidate_Attorney"
+        
+        return {"applicant": applicant, "position": position, "source": "filename"}
+
+    @staticmethod
+    def extract_from_pdf_content(pdf_path: Path) -> Optional[Dict[str, str]]:
+        """Reads PDF text to find Z83 details."""
+        try:
+            with open(pdf_path, 'rb') as file:
+                reader = PyPDF2.PdfReader(file)
+                text = ""
+                # Read first 2 pages
+                for i in range(min(len(reader.pages), 2)): 
+                    text += reader.pages[i].extract_text()
+            
+            text_upper = text.upper()
+            metadata = {}
+            
+            # Detect Position
+            if 'JUDGE' in text_upper and 'SECRETARY' in text_upper:
+                metadata['position'] = 'Judges_Secretary'
+            elif 'STATE LAW ADVISOR' in text_upper:
+                metadata['position'] = 'State_Law_Advisor'
+            elif 'LEGAL ADMIN' in text_upper:
+                metadata['position'] = 'Legal_Admin_Officer'
+            else:
+                return None # Failed to find specific position
+
+            # Detect Applicant
+            if "REX" in text_upper and "STONE" in text_upper:
+                metadata['applicant'] = "Rex_Stone"
+            elif "SANDISO" in text_upper:
+                metadata['applicant'] = "Sandiso_Mazibuko"
+            else:
+                metadata['applicant'] = "Unknown_Applicant"
+
+            metadata['source'] = "pdf_content"
+            return metadata
+        except:
+            return None
+
+    @staticmethod
+    def get_metadata(file_path: Path) -> Dict[str, str]:
+        """Master function combines PDF content and Filename analysis."""
+        meta = None
+        if file_path.suffix.lower() == '.pdf':
+            meta = MetadataExtractor.extract_from_pdf_content(file_path)
+        
+        if not meta:
+            meta = MetadataExtractor.extract_from_filename(file_path.name)
+        return meta
+
+# ============================================================================
+# 🔍 SCANNER
+# ============================================================================
+
+class FileScanner:
+    @staticmethod
+    def is_relevant_file(filename: str) -> bool:
+        """Decides if a file is worth looking at."""
+        name_lower = filename.lower()
+
+        # 1. Check Junk Keywords (Fail fast)
+        for junk in JUNK_KEYWORDS:
+            if junk in name_lower:
+                return False
+        
+        # 2. Check Required Keywords
+        for req in REQUIRED_KEYWORDS:
+            if req in name_lower:
+                return True
+        
+        return False
+
+    @staticmethod
+    def scan_strict(folders: List[str], date_from: str, date_to: str) -> List[Dict[str, Any]]:
+        dt_from = datetime.strptime(date_from, "%Y-%m-%d")
+        dt_to = datetime.strptime(date_to, "%Y-%m-%d")
+        found_files = []
+        
+        with Progress(
+            SpinnerColumn(), TextColumn("[progress.description]{task.description}"),
+            BarColumn(), console=console
+        ) as progress:
+            
+            for folder_str in folders:
+                folder = Path(folder_str)
+                if not folder.exists(): continue
+                
+                task = progress.add_task(f"Scanning {folder.name}...", total=None)
+                
+                # Scan Logic
+                for root, dirs, files in os.walk(folder, topdown=True):
+                    # Skip ignored folders
+                    dirs[:] = [d for d in dirs if d not in IGNORED_DIRS and not d.startswith('.')]
+                    
+                    for filename in files:
+                        file_path = Path(root) / filename
+                        
+                        # 1. Extension Check
+                        if file_path.suffix.lower() not in TARGET_EXTENSIONS: continue
+                        
+                        # 2. Strict Name Check (Skip bank statements etc)
+                        if not FileScanner.is_relevant_file(filename): continue
+
+                        try:
+                            stat = file_path.stat()
+                            mod_time = datetime.fromtimestamp(stat.st_mtime)
+                            
+                            # 3. Date Check
+                            if dt_from <= mod_time <= dt_to:
+                                meta = MetadataExtractor.get_metadata(file_path)
+                                found_files.append({
+                                    'path': file_path, 'name': filename,
+                                    'modified': mod_time, 'metadata': meta
+                                })
+                                progress.update(task, description=f"Found: {filename}")
+                        except: pass
+        return found_files
+
+# ============================================================================
+# 📄 REPORTING
+# ============================================================================
+
+def save_report(files: List[Dict], dest_base: Path):
+    report_path = Path("scan_report.txt")
+    with open(report_path, "w", encoding="utf-8") as f:
+        f.write(f"SCAN REPORT - {datetime.now()}\n")
+        f.write(f"Total Files Found: {len(files)}\n")
+        f.write("="*80 + "\n")
+        f.write(f"{'FILENAME':<50} | {'APPLICANT':<20} | {'POSITION':<30} | {'DATE'}\n")
+        f.write("-" * 120 + "\n")
+        
+        for file in files:
+            meta = file['metadata']
+            f.write(f"{file['name'][:48]:<50} | {meta['applicant']:<20} | {meta['position']:<30} | {file['modified'].strftime('%Y-%m-%d')}\n")
+            
+    console.print(f"\n[green]📝 Report saved to: [bold]{report_path.resolve()}[/bold][/green]")
+    console.print("[dim]Open this file to check what will be moved before confirming.[/dim]")
+
+# ============================================================================
+# 📦 ORGANIZER
+# ============================================================================
+
+class Organizer:
+    @staticmethod
+    def execute(files: List[Dict], dest_base: Path):
+        success = 0
+        fails = 0
+        
+        with Progress(
+            SpinnerColumn(), TextColumn("Moving files..."),
+            BarColumn(), console=console
+        ) as progress:
+            task = progress.add_task("Moving...", total=len(files))
+            
+            for f in files:
+                meta = f['metadata']
+                
+                # Create Folder: e.g. Applications/Judges_Secretary
+                target_folder = dest_base / meta['position']
+                target_folder.mkdir(parents=True, exist_ok=True)
+                
+                # Generate Name: Sandiso_Mazibuko_Judges_Secretary_20250911_v1.pdf
+                date_str = f['modified'].strftime("%Y%m%d")
+                base_name = f"{meta['applicant']}_{meta['position']}_{date_str}"
+                
+                # Versioning
+                existing = list(target_folder.glob(f"{base_name}_v*.pdf"))
+                version = len(existing) + 1
+                
+                new_name = f"{base_name}_v{version}{f['path'].suffix}"
+                dest_path = target_folder / new_name
+                
+                try:
+                    shutil.copy2(f['path'], dest_path)
+                    success += 1
+                except Exception:
+                    fails += 1
+                progress.advance(task)
+                
+        return success, fails
+
+# ============================================================================
+# 🚀 MAIN
+# ============================================================================
+
+def main():
+    console.clear()
+    console.print("[bold cyan]🚀 FileFlow Strict Mode[/bold cyan]")
+    console.print("[dim]Filters out junk (Statements, Ebooks, etc) & Generates Reports[/dim]\n")
+
+    # 1. Config
+    default_folders = [r"C:\Users\sandi\Desktop\Career assistant", r"C:\Users\sandi\Downloads"]
+    console.print(f"Scan locations: [yellow]{', '.join([Path(p).name for p in default_folders])}[/yellow]")
+    
+    if not Confirm.ask("Use these folders?", default=True):
+        folders = []
+        while True:
+            p = Prompt.ask("Path (Enter to finish)")
+            if not p: break
+            folders.append(p)
+    else:
+        folders = default_folders
+
+    console.print()
+    date_from = Prompt.ask("Start Date", default="2024-01-01")
+    date_to = Prompt.ask("End Date", default=datetime.now().strftime("%Y-%m-%d"))
+    dest_path = Prompt.ask("Destination", default=r"C:\Users\sandi\Desktop\Applications_Sorted")
+    dest = Path(dest_path)
+
+    # 2. Scan
+    console.print("\n[bold]Scanning...[/bold]")
+    files = FileScanner.scan_strict(folders, date_from, date_to)
+    
+    if not files:
+        console.print("[red]No job applications found.[/red]")
+        return
+
+    # 3. Report
+    save_report(files, dest)
+    
+    console.print(f"\n[bold cyan]Found {len(files)} potential applications.[/bold cyan]")
+    
+    # 4. Execute
+    if Confirm.ask("Proceed with organization?", default=False):
+        s, f = Organizer.execute(files, dest)
+        console.print(f"\n[bold green]Done! {s} moved, {f} failed.[/bold green]")
+
+if __name__ == "__main__":
+    main()
+
+================================================================================
+FILE: fileflow_select.py
+================================================================================
+
+#!/usr/bin/env python3
+"""
+FileFlow Select (v6) - The "House Cleaning" Tool
+Features:
+1. Interactive Subfolder Selection (Pick which "room" to clean)
+2. Local Staging: Creates _Organized_Output INSIDE the selected subfolder
+3. Genius Intelligence: Extracts dates and jobs from folder structures
+"""
+
+import os
+import shutil
+import re
+import time
+import argparse
+from pathlib import Path
+from typing import List, Dict, Any, Optional
+from datetime import datetime
+import PyPDF2
+import json
+from rich.console import Console
+from rich.prompt import Prompt, Confirm
+from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn
+from rich.panel import Panel
+from rich.table import Table
+
+console = Console(width=100) 
+
+# ============================================================================
+# ⚙️ CONFIGURATION
+# ============================================================================
+
+IGNORED_SYSTEM_DIRS = {
+    '.venv', 'venv', 'env', '__pycache__', '.git', 'node_modules', 
+    '.vscode', 'site-packages', 'Lib', 'Scripts', 'assets', 'images', 'css', 'js',
+    'reports', '_Organized_Output', 'System Volume Information'
+}
+
+TARGET_EXTENSIONS = {'.pdf', '.docx', '.doc'}
+
+KEYWORDS_NEGATIVE = [
+    "statement", "invoice", "receipt", "lease", "agreement", 
+    "contract", "payment", "study guide", "textbook", "exam", 
+    "tutorial", "assignment", "transcript", "ticket", "cheque",
+    "curriculum_plan", "id_copy", "matric", "template", "flyer",
+    "udemy", "course resource"
+]
+
+FOLDER_JOB_MAP = {
+    "ADMINISTRATION_CLERK": "Administration_Clerk",
+    "ADMIN_CLERK": "Administration_Clerk",
+    "REGIONAL_COURT": "Regional_Court_Prosecutor",
+    "DISTRICT_COURT": "District_Court_Prosecutor",
+    "PROSECUTOR": "Public_Prosecutor",
+    "SECRETARY": "Secretary",
+    "JUDGE": "Judges_Secretary",
+    "LEGAL_ADMIN": "Legal_Admin_Officer",
+    "STATE_LAW": "State_Law_Advisor",
+    "CANDIDATE": "Candidate_Attorney",
+    "ATTORNEY": "Candidate_Attorney",
+    "INTERNSHIP": "Legal_Internship",
+    "REGISTRAR": "Registrar",
+    "CLERK": "Clerk"
+}
+
+LAW_FIRMS = [
+    "ENS", "WEBBER", "BOWMANS", "CLIFFE", "DEKKER", "HOFMEYR", 
+    "WERKSMANS", "NORTON", "ROSE", "FASKEN", "HOGAN", "LOVELLS",
+    "MACROBERT", "ADAMS", "SPOOR", "FISHER", "STRAUSS", "DALY",
+    "ATTORNEYS", "INC", "LAW"
+]
+
+# ============================================================================
+# 🧠 INTELLIGENT EXTRACTOR
+# ============================================================================
+
+class ContextExtractor:
+    @staticmethod
+    def extract_from_pdf_content(pdf_path: Path) -> Optional[Dict[str, str]]:
+        try:
+            with open(pdf_path, 'rb') as file:
+                reader = PyPDF2.PdfReader(file)
+                text = reader.pages[0].extract_text() if len(reader.pages) > 0 else ""
+            
+            text_upper = text.upper()
+            metadata = {}
+            
+            for key, value in FOLDER_JOB_MAP.items():
+                if key.replace('_', ' ') in text_upper:
+                    metadata['position'] = value
+                    break
+            
+            if "REX" in text_upper and "STONE" in text_upper: metadata['applicant'] = "Rex_Stone"
+            elif "SANDISO" in text_upper: metadata['applicant'] = "Sandiso_Mazibuko"
+            
+            return metadata if 'position' in metadata else None
+        except: return None
+
+    @staticmethod
+    def extract_date_from_string(text: str) -> Optional[datetime]:
+        match = re.search(r'(202[3-9])(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])', text)
+        if match:
+            try:
+                return datetime.strptime(match.group(0), "%Y%m%d")
+            except: pass
+        return None
+
+    @staticmethod
+    def extract_from_filename(filename: str) -> Dict[str, str]:
+        applicant = None
+        position = None
+        fname_lower = filename.lower()
+        
+        if "rex" in fname_lower: applicant = "Rex_Stone"
+        elif "sandiso" in fname_lower: applicant = "Sandiso_Mazibuko"
+        
+        for key, value in FOLDER_JOB_MAP.items():
+            if key.lower() in fname_lower:
+                position = value
+                break
+        
+        return {"applicant": applicant, "position": position}
+
+    @staticmethod
+    def analyze_path_context(file_path: Path) -> Dict[str, Any]:
+        parent = file_path.parent.name
+        grandparent = file_path.parent.parent.name
+        
+        inferred_position = None
+        inferred_date = None
+
+        for key, value in FOLDER_JOB_MAP.items():
+            if key in parent.upper():
+                inferred_position = value
+                break
+        
+        if not inferred_position:
+            for firm in LAW_FIRMS:
+                if firm in parent.upper():
+                    inferred_position = "Candidate_Attorney"
+                    break
+
+        if not inferred_position and "DEPARTMENT" in parent.upper():
+            clean_name = re.sub(r'^\d+_', '', parent)
+            inferred_position = f"App_{clean_name[:30]}"
+
+        date_found = ContextExtractor.extract_date_from_string(parent)
+        if not date_found:
+            date_found = ContextExtractor.extract_date_from_string(grandparent)
+        
+        if date_found:
+            inferred_date = date_found
+
+        return {
+            "position": inferred_position,
+            "date": inferred_date
+        }
+
+    @staticmethod
+    def get_metadata(file_path: Path) -> Dict[str, Any]:
+        final_meta = {
+            'applicant': "Unknown_Applicant",
+            'position': "General_Application",
+            'source': "default",
+            'final_date': None
+        }
+
+        name_meta = ContextExtractor.extract_from_filename(file_path.name)
+        if name_meta['applicant']: final_meta['applicant'] = name_meta['applicant']
+        if name_meta['position']: 
+            final_meta['position'] = name_meta['position']
+            final_meta['source'] = "filename"
+
+        if file_path.suffix.lower() == '.pdf':
+            pdf_meta = ContextExtractor.extract_from_pdf_content(file_path)
+            if pdf_meta:
+                if pdf_meta.get('applicant'): final_meta['applicant'] = pdf_meta['applicant']
+                if pdf_meta.get('position'): 
+                    final_meta['position'] = pdf_meta['position']
+                    final_meta['source'] = "pdf_content"
+
+        context = ContextExtractor.analyze_path_context(file_path)
+        
+        if final_meta['position'] == "General_Application" and context['position']:
+            final_meta['position'] = context['position']
+            final_meta['source'] = "folder_context"
+
+        final_meta['final_date'] = context['date']
+        
+        return final_meta
+
+# ============================================================================
+# 🔍 SCANNER
+# ============================================================================
+
+class TacticalScanner:
+    @staticmethod
+    def is_wanted_file(filename: str) -> bool:
+        name_lower = filename.lower()
+        for junk in KEYWORDS_NEGATIVE:
+            if junk in name_lower: return False
+        return True 
+
+    @staticmethod
+    def scan_specific_folder(root_folder: Path) -> List[Dict]:
+        """Scans ONE specific folder recursively."""
+        files_found = []
+        
+        # We create a new progress bar for EACH folder we scan
+        with Progress(
+            SpinnerColumn(), 
+            TextColumn("[bold cyan]Scanning...[/bold cyan]"),
+            BarColumn(bar_width=40),
+            TextColumn("[dim]{task.description}[/dim]"),
+            console=console,
+            transient=True 
+        ) as progress:
+            task = progress.add_task("Initializing...", total=None)
+            
+            for root, dirs, files in os.walk(root_folder, topdown=True):
+                dirs[:] = [d for d in dirs if d not in IGNORED_SYSTEM_DIRS and not d.startswith('.')]
+                
+                folder_name = Path(root).name
+                display_name = (folder_name[:30] + '..') if len(folder_name) > 30 else folder_name
+                progress.update(task, description=f"📂 {display_name}")
+                
+                for filename in files:
+                    file_path = Path(root) / filename
+                    
+                    if file_path.suffix.lower() not in TARGET_EXTENSIONS: continue
+                    if not TacticalScanner.is_wanted_file(filename): continue
+
+                    try:
+                        stat = file_path.stat()
+                        phys_date = datetime.fromtimestamp(stat.st_mtime)
+                        meta = ContextExtractor.get_metadata(file_path)
+                        final_date = meta['final_date'] if meta['final_date'] else phys_date
+                        
+                        files_found.append({
+                            'path': file_path, 
+                            'name': filename,
+                            'date': final_date,
+                            'metadata': meta
+                        })
+                    except: pass
+        return files_found
+
+# ============================================================================
+# 📄 REPORTING & LOGGING
+# ============================================================================
+
+def generate_folder_report(files: List[Dict], folder_name: str) -> Path:
+    """Generates a report specific to the folder being processed."""
+    report_dir = Path.cwd() / "reports"
+    report_dir.mkdir(exist_ok=True)
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    report_file = report_dir / f"Log_{folder_name}_{timestamp}.txt"
+    
+    with open(report_file, "w", encoding="utf-8") as f:
+        f.write(f"SCAN REPORT FOR: {folder_name}\n")
+        f.write(f"TOTAL FILES    : {len(files)}\n")
+        f.write("="*100 + "\n")
+        f.write(f"{'FILENAME':<50} | {'APPLICANT':<15} | {'DETECTED JOB':<25} | {'SMART DATE'}\n")
+        f.write("-" * 100 + "\n")
+        
+        for file in files:
+            meta = file['metadata']
+            date_str = file['date'].strftime("%Y-%m-%d")
+            app_name = meta.get('applicant', 'Unknown')
+            job_name = meta.get('position', 'General')
+            f.write(f"{file['name'][:45]:<50} | {app_name:<15} | {job_name:<25} | {date_str}\n")
+            
+    return report_file
+
+# ============================================================================
+# 📦 ORGANIZER
+# ============================================================================
+
+def organize_files(files: List[Dict], root_folder: Path):
+    # OUTPUT goes INSIDE the folder being scanned
+    output_base = root_folder / "_Organized_Output"
+    output_base.mkdir(exist_ok=True)
+    success_count = 0
+    
+    with Progress(
+        SpinnerColumn(), 
+        TextColumn("[bold green]Staging Files...[/bold green]"),
+        BarColumn(bar_width=40),
+        console=console,
+        transient=True
+    ) as progress:
+        task = progress.add_task("Copying...", total=len(files))
+        
+        for f in files:
+            meta = f['metadata']
+            date_obj = f['date']
+            clean_job = re.sub(r'[^\w\-_]', '_', meta.get('position', 'General'))
+            
+            # Create Job Subfolder (e.g. _Organized_Output/Judges_Secretary)
+            dest_folder = output_base / clean_job
+            dest_folder.mkdir(parents=True, exist_ok=True)
+            
+            date_str = date_obj.strftime("%Y%m%d")
+            applicant = meta.get('applicant', 'Unknown')
+            base_name = f"{applicant}_{clean_job}_{date_str}"
+            
+            # Versioning
+            existing = list(dest_folder.glob(f"{base_name}_v*.pdf"))
+            version = len(existing) + 1
+            
+            new_name = f"{base_name}_v{version}{f['path'].suffix}"
+            dest_path = dest_folder / new_name
+            
+            try:
+                shutil.copy2(f['path'], dest_path)
+                success_count += 1
+            except: pass
+            progress.advance(task)
+            
+    return output_base, success_count
+
+# ============================================================================
+# 🎯 SELECTOR UI
+# ============================================================================
+
+def select_subfolders(root: Path) -> List[Path]:
+    """Interactive subfolder selector."""
+    all_items = [d for d in root.iterdir() if d.is_dir() and d.name not in IGNORED_SYSTEM_DIRS]
+    all_items.sort(key=lambda x: x.name)
+    
+    if not all_items:
+        return [root] 
+
+    console.print(f"\n[bold]Found {len(all_items)} folders in {root.name}:[/bold]")
+    
+    table = Table(show_header=False, box=None)
+    table.add_column("ID", style="cyan", justify="right")
+    table.add_column("Folder Name", style="yellow")
+    
+    for i, folder in enumerate(all_items, 1):
+        table.add_row(str(i), folder.name)
+    
+    console.print(table)
+    console.print("\n[dim]Enter numbers separated by commas (e.g. '1,3,5') or 'all'[/dim]")
+    
+    selection = Prompt.ask("Select folders to process")
+    
+    selected_folders = []
+    if selection.lower().strip() == 'all':
+        return all_items
+    
+    try:
+        indices = [int(x.strip()) for x in selection.split(',') if x.strip().isdigit()]
+        for i in indices:
+            if 1 <= i <= len(all_items):
+                selected_folders.append(all_items[i-1])
+    except:
+        console.print("[red]Invalid selection.[/red]")
+        return []
+        
+    return selected_folders
+
+# ============================================================================
+# 🚀 MAIN
+# ============================================================================
+
+def main():
+    console.clear()
+    console.print(Panel.fit("[bold cyan]FileFlow Select (v6)[/bold cyan]"))
+    
+    target_str = Prompt.ask("Folder path to scan", default=r"C:\Users\sandi\Desktop\Courses")
+    if not target_str: return
+    root_folder = Path(target_str.strip('"').strip("'"))
+    
+    if not root_folder.exists():
+        console.print("[red]Folder not found[/red]")
+        return
+
+    # 1. Select Folders
+    folders_to_process = select_subfolders(root_folder)
+    if not folders_to_process: return
+
+    console.print(f"\n[bold]Processing {len(folders_to_process)} folders...[/bold]\n")
+
+    # 2. Loop through each selected folder
+    for folder in folders_to_process:
+        console.print(f"[bold cyan]Room: {folder.name}[/bold cyan]")
+        
+        # Scan
+        files = TacticalScanner.scan_specific_folder(folder)
+        if not files:
+            console.print(f"  [yellow]No files found in {folder.name}[/yellow]")
+            continue
+            
+        # Report
+        report = generate_folder_report(files, folder.name)
+        console.print(f"  [green]✓ Found {len(files)} files.[/green] Report: {report.name}")
+        
+        # Confirm & Action
+        if Confirm.ask(f"  Centralize these {len(files)} files into '{folder.name}/_Organized_Output'?", default=True):
+            out, count = organize_files(files, folder)
+            console.print(f"  [bold green]✓ {count} files centralized.[/bold green]")
+        else:
+            console.print("  [dim]Skipped.[/dim]")
+        
+        console.print("-" * 50)
+
+    console.print("\n[bold green]✨ Batch Processing Complete![/bold green]")
+
+if __name__ == "__main__":
+    try:
+        main()
+    except KeyboardInterrupt:
+        console.print("\n[bold red]Cancelled.[/bold red]")
+
+================================================================================
+FILE: merge_codebase.py
+================================================================================
+
+import os
+from pathlib import Path
+
+# Configuration
+SOURCE_DIR = Path(r"c:/Users/sandi/Desktop/FileFlow")
+OUTPUT_FILE = SOURCE_DIR / "fileflow_codebase.txt"
+
+# Files/Dirs to ignore
+IGNORE_DIRS = {'.git', '.venv', '__pycache__', '.idea', '.vscode', 'reports', 'utils'}
+IGNORE_EXTENSIONS = {'.pyc', '.pdf', '.docx', '.doc', '.jpg', '.png', '.exe', '.bin', '.csv', '.zip'}
+IGNORE_FILES = {
+    'fileflow_codebase.txt', 
+    'package-lock.json', 
+    'yarn.lock',
+    'dry_run_report.txt',
+    'Scan_Report_Courses_20251123_0908.txt'
+}
+
+def is_text_file(file_path):
+    try:
+        with open(file_path, 'r', encoding='utf-8') as f:
+            f.read(1024)
+        return True
+    except (UnicodeDecodeError, IOError):
+        return False
+
+def merge_files():
+    print(f"Scanning {SOURCE_DIR}...")
+    
+    with open(OUTPUT_FILE, 'w', encoding='utf-8') as outfile:
+        outfile.write(f"# FileFlow Codebase Export\n")
+        outfile.write(f"# Generated on {os.path.basename(__file__)}\n\n")
+        
+        for root, dirs, files in os.walk(SOURCE_DIR):
+            # Modify dirs in-place to skip ignored directories
+            dirs[:] = [d for d in dirs if d not in IGNORE_DIRS]
+            
+            for file in files:
+                if file in IGNORE_FILES:
+                    continue
+                
+                file_path = Path(root) / file
+                
+                if file_path.suffix.lower() in IGNORE_EXTENSIONS:
+                    continue
+                
+                # Calculate relative path for display
+                try:
+                    rel_path = file_path.relative_to(SOURCE_DIR)
+                except ValueError:
+                    rel_path = file_path
+                
+                if not is_text_file(file_path):
+                    print(f"Skipping binary file: {rel_path}")
+                    continue
+                
+                print(f"Processing: {rel_path}")
+                
+                # Write file header
+                outfile.write(f"\n{'='*80}\n")
+                outfile.write(f"FILE: {rel_path}\n")
+                outfile.write(f"{'='*80}\n\n")
+                
+                try:
+                    with open(file_path, 'r', encoding='utf-8', errors='replace') as infile:
+                        content = infile.read()
+                        outfile.write(content)
+                        outfile.write("\n")
+                except Exception as e:
+                    outfile.write(f"ERROR READING FILE: {e}\n")
+                    print(f"Error reading {rel_path}: {e}")
+
+    print(f"\nSuccessfully created {OUTPUT_FILE}")
+
+if __name__ == "__main__":
+    merge_files()
+
+
+================================================================================
+FILE: organizer.py
+================================================================================
+
+# organizer.py
+
+import argparse
+from pathlib import Path
+from typing import List, Dict, Any
+
+from rich.console import Console
+from rich.prompt import Prompt, Confirm
+from rich.table import Table
+
+from utils.categorizer import Categorizer, FileInfo
+from utils.file_utils import FileUtils
+from utils.log_utils import log_move, get_last_log_entry, remove_last_log_entry
+import sys
+from typing import Optional
+
+# Initialize Rich Console for beautiful output. `record=True` allows saving output.
+console = Console(record=True)
+
+def generate_file_table(files_data: List[FileInfo], categorizer: Categorizer) -> Table:
+    """Generates a Rich table object from the file data."""
+    table = Table(title="[bold cyan]📁 Files Found for Organization[/bold cyan]", show_header=True, header_style="bold magenta")
+    table.add_column("#", style="dim", width=4)
+    table.add_column("File Name", style="bold", min_width=20)
+    table.add_column("Suggested Category", style="yellow", min_width=15)
+    table.add_column("Size", justify="right")
+    table.add_column("Last Modified", justify="right")
+ 
+    for i, f_info in enumerate(files_data):
+        category = categorizer.categorize_file(f_info)
+        table.add_row(
+            str(i),
+            f_info['name'],
+            category,
+            FileUtils.format_size(f_info['size']),
+            f_info['modified'].strftime('%Y-%m-%d %H:%M'),
+        )
+    return table
+
+def save_table_to_file(table: Table, output_file: Path, console: Console):
+    """Saves a text representation of the table to a file."""
+    try:
+        with output_file.open("w", encoding="utf-8") as f:
+            # Use Rich's console to render the table to a text format
+            with console.capture() as capture:
+                console.print(table)
+            f.write(capture.get())
+        console.print(f"[green]✅ Full file list saved to:[/] [bold cyan]{output_file}[/]")
+    except IOError as e:
+        console.print(f"[red]❌ Error: Could not write to output file {output_file}: {e}[/red]")
+
+# ... (The rest of the functions like parse_selection, organize_files, etc., remain the same) ...
+
+def parse_selection(selection: str, total: int) -> List[int]:
+    """Parses user input like '1,3,5-7' into a list of indices."""
+    s = selection.strip().lower()
+    if s in ("none", "cancel", "exit"):
+        return []
+    if s == "all":
+        return list(range(total))
+    
+    selected = set()
+    for part in s.split(','):
+        part = part.strip()
+        if not part:
+            continue
+        if '-' in part:
+            try:
+                start, end = map(int, part.split('-', 1))
+                selected.update(range(start, end + 1))
+            except ValueError:
+                continue
+        else:
+            try:
+                selected.add(int(part))
+            except ValueError:
+                continue
+    
+    return sorted([i for i in selected if 0 <= i < total])
+
+def organize_files(
+    files_data: List[FileInfo],
+    selected_indices: List[int],
+    categorizer: Categorizer,
+    dest_base: Path,
+    dry_run: bool = False
+) -> Dict[str, List[Dict]]:
+    """Processes and moves files, logging the results."""
+    results: Dict[str, List[Dict]] = {'success': [], 'failed': []}
+    settings = categorizer.settings
+    
+    with console.status("[bold green]Organizing files...") as status:
+        for idx in selected_indices:
+            if idx >= len(files_data):
+                continue
+            
+            f_info = files_data[idx]
+            category = categorizer.categorize_file(f_info)
+            status.update(f"Processing [bold magenta]{f_info['name']}[/]...")
+
+            date_folder = ""
+            if settings.get('organize_by_date', True):
+                date_folder = f_info['modified'].strftime(settings.get('date_format', '%Y-%m'))
+            
+            dest_folder = dest_base / category / date_folder
+            dest_path = dest_folder / f_info['name']
+
+            # Handle duplicates
+            if dest_path.exists():
+                handle_dup = settings.get('handle_duplicates', 'rename')
+                if handle_dup == 'rename':
+                    dest_path = Path(FileUtils.get_unique_filename(str(dest_path)))
+                elif handle_dup == 'skip':
+                    results['failed'].append({'name': f_info['name'], 'error': 'File exists, skipped.'})
+                    continue
+                elif handle_dup == 'overwrite' and not dry_run:
+                    dest_path.unlink()
+
+            if dry_run:
+                results['success'].append({'name': f_info['name'], 'destination': str(dest_path)})
+            else:
+                try:
+                    dest_folder.mkdir(parents=True, exist_ok=True)
+                    FileUtils.safe_move(f_info['path'], str(dest_path))
+                    log_move(f_info['path'], str(dest_path), category=category, success=True)
+                    results['success'].append({'name': f_info['name'], 'destination': str(dest_path)})
+                except Exception as e:
+                    log_move(f_info['path'], str(dest_path), category=category, success=False, error=str(e))
+                    results['failed'].append({'name': f_info['name'], 'error': str(e)})
+
+    return results
+
+def undo_last_move() -> None:
+    """Reverts the last successful move operation from the log file."""
+    last_log = get_last_log_entry()
+    if not last_log:
+        console.print("[yellow]No log entries to undo.[/yellow]")
+        return
+    
+    if not last_log.get('success'):
+        console.print("[yellow]Last operation was a failure, cannot undo.[/yellow]")
+        return
+
+    dest = Path(last_log['destination'])
+    src = Path(last_log['source'])
+
+    if not dest.exists():
+        console.print(f"[red]Cannot undo: Destination file missing -> {dest}[/red]")
+        return
+    
+    console.print(f"Attempting to undo move: '[cyan]{dest.name}[/cyan]' from '[bold]{dest.parent}[/]' back to '[bold]{src.parent}[/]'.")
+    if not Confirm.ask("[bold yellow]Proceed with undo?[/bold yellow]"):
+        console.print("Undo cancelled.")
+        return
+
+    try:
+        src.parent.mkdir(parents=True, exist_ok=True)
+        FileUtils.safe_move(str(dest), str(src))
+        remove_last_log_entry()
+        console.print(f"[green]✅ Undo successful:[/green] Restored [cyan]{src.name}[/] to its original location.")
+    except Exception as e:
+        console.print(f"[bold red]❌ Undo failed:[/bold red] {e}")
+
+def main() -> None:
+    """Main entry point for the CLI application."""
+    parser = argparse.ArgumentParser(
+        prog="FileFlow",
+        description="A smart file organizer CLI with interactive and automated modes."
+    )
+    parser.add_argument("source", nargs="?", help="Source folder to scan.")
+    parser.add_argument("dest", nargs="?", help="Destination base folder.")
+    parser.add_argument("-c", "--config", default="config.json", help="Path to config file.")
+    # --- ADDED NEW ARGUMENTS ---
+    parser.add_argument("-o", "--output-file", help="Save the full file list table to a text file.")
+    parser.add_argument("--no-recursive", action="store_true", help="Only scan the top-level source folder, not subfolders.")
+    # --- END OF NEW ARGUMENTS ---
+    parser.add_argument("--auto", action="store_true", help="Automatically select all files.")
+    parser.add_argument("-y", "--yes", action="store_true", help="Auto-confirm all prompts (use with --auto).")
+    parser.add_argument("--dry-run", action="store_true", help="Simulate the organization without moving files.")
+    parser.add_argument("--undo", action="store_true", help="Undo the last successful file move.")
+    args = parser.parse_args()
+
+    console.print("[bold green]🚀 Welcome to FileFlow! 🚀[/bold green]")
+
+    if args.undo:
+        undo_last_move()
+        sys.exit(0)
+
+    source_dir = args.source or Prompt.ask("[bold]📂 Enter source folder to scan[/bold]")
+    dest_dir = args.dest or Prompt.ask("[bold]🎯 Enter destination folder[/bold]")
+    
+    source = Path(source_dir).expanduser()
+    dest = Path(dest_dir).expanduser()
+
+    if not source.is_dir():
+        console.print(f"[red]Error: Source folder not found at '{source}'[/red]")
+        sys.exit(1)
+
+    try:
+        dest.mkdir(parents=True, exist_ok=True)
+    except Exception as e:
+        console.print(f"[red]Error: Could not create destination folder at '{dest}': {e}[/red]")
+        sys.exit(1)
+
+    try:
+        dest.mkdir(parents=True, exist_ok=True)
+    except Exception as e:
+        console.print(f"[red]Error: Could not create destination folder at '{dest}': {e}[/red]")
+        sys.exit(1)
+
+    categorizer = Categorizer(config_path=args.config)
+    ignore_rules = categorizer.config.get("ignore", {})
+    
+    # --- MODIFIED SCANNING LOGIC ---
+    is_recursive = not args.no_recursive
+    console.print(f"🔍 Scanning [cyan]{source}[/]... (Recursive: {is_recursive})")
+    files = FileUtils.scan_folder(str(source), ignore_rules, recursive=is_recursive)
+    # --- END OF MODIFIED LOGIC ---
+ 
+    if not files:
+        console.print("[yellow]No files found to organize (after applying ignore rules).[/yellow]")
+        sys.exit(0)
+    
+    console.print(f"✅ Found {len(files)} files.")
+    files.sort(key=lambda x: x['modified'], reverse=True)
+
+    # Generate the table of files
+    file_table = generate_file_table(files, categorizer)
+
+    # --- ADDED SAVE-TO-FILE LOGIC ---
+    if args.output_file:
+        save_table_to_file(file_table, Path(args.output_file), console)
+    # --- END OF SAVE-TO-FILE LOGIC ---
+
+    # Display the table to the console regardless
+    console.print(file_table)
+
+    if args.auto:
+        selected_indices = list(range(len(files)))
+        console.print(f"[cyan]--auto mode enabled. Selected all {len(selected_indices)} files.[/cyan]")
+        if not args.yes and not args.dry_run:
+            if not Confirm.ask(f"Proceed with organizing {len(selected_indices)} files?"):
+                console.print("Operation cancelled.")
+                sys.exit(0)
+    else:
+        selection_str = Prompt.ask("\n[bold]✅ Select files to organize (e.g., 0,1,4-7 or 'all')[/bold]")
+        selected_indices = parse_selection(selection_str, len(files))
+
+    if not selected_indices:
+        console.print("[yellow]No files selected. Exiting.[/yellow]")
+        sys.exit(0)
+
+    if args.dry_run:
+        console.print("\n[bold yellow]-- DRY RUN MODE --[/bold yellow]")
+    else:
+        console.print(f"\n[bold]Moving {len(selected_indices)} files to subfolders within '{dest}'[/bold]")
+        if not args.yes and not Confirm.ask("[bold yellow]Are you sure you want to proceed?[/bold yellow]"):
+            console.print("Operation cancelled.")
+            sys.exit(0)
+
+    results = organize_files(files, selected_indices, categorizer, dest, dry_run=args.dry_run)
+    
+    # Final Results Summary
+    console.print("\n[bold green]✨ Organization Complete ✨[/bold green]")
+    if results['success']:
+        success_table = Table(title="[bold green]Successful Moves[/bold green]")
+        success_table.add_column("File Name", style="cyan")
+        success_table.add_column("Destination Path")
+        for item in results['success']:
+            success_table.add_row(item['name'], item['destination'])
+        console.print(success_table)
+
+    if results['failed']:
+        fail_table = Table(title="[bold red]Failed Moves[/bold red]")
+        fail_table.add_column("File Name", style="cyan")
+        fail_table.add_column("Reason")
+        for item in results['failed']:
+            fail_table.add_row(item['name'], item['error'])
+        console.print(fail_table)
+
+# Keep the original helper functions (parse_selection, organize_files, undo_last_move) as they were.
+
+if __name__ == "__main__":
+    try:
+        main()
+    except KeyboardInterrupt:
+        console.print("\n[bold red]Operation cancelled by user.[/bold red]")
+    except Exception as e:
+        console.print(f"\n[bold red]An unexpected error occurred: {e}[/bold red]")
+
+================================================================================
+FILE: requirements.txt
+================================================================================
+
+rich>=13.0.0
+PyPDF2>=3.0.0
+python-dotenv==1.1.1
+typer==0.8.0
+textual>=0.40.0
+
+================================================================================
+FILE: fileflow\cli.py
+================================================================================
+
+import argparse
+import sys
+from pathlib import Path
+from fileflow.tui import FileFlowApp
+from fileflow.core.scanner import Scanner
+from fileflow.core.organizer import Organizer
+
+def main():
+    parser = argparse.ArgumentParser(description="FileFlow - Job PDF Organizer")
+    subparsers = parser.add_subparsers(dest='command', help='Commands')
+    
+    # Dashboard (Default)
+    parser_dash = subparsers.add_parser('dashboard', help='Launch Interactive Dashboard')
+    
+    # Scan
+    parser_scan = subparsers.add_parser('scan', help='Scan a folder')
+    parser_scan.add_argument('path', help='Path to scan')
+    
+    args = parser.parse_args()
+
+    if args.command == 'dashboard' or args.command is None:
+        app = FileFlowApp()
+        app.run()
+    elif args.command == 'scan':
+        path = Path(args.path)
+        if not path.exists():
+            print(f"Error: {path} does not exist.")
+            return
+        
+        print(f"Scanning {path}...")
+        results = Scanner.scan_directory(path)
+        total = sum(len(files) for files in results.values())
+        print(f"Found {total} files.")
+        
+        for folder, files in results.items():
+            for f in files:
+                print(f"- {f['name']} ({f['metadata'].get('position')})")
+
+if __name__ == "__main__":
+    main()
+
+
+================================================================================
+FILE: fileflow\config.py
+================================================================================
+
+import json
+from pathlib import Path
+from typing import Set, List, Dict
+
+class Config:
+    IGNORED_SYSTEM_DIRS: Set[str] = {
+        '.venv', 'venv', 'env', '__pycache__', '.git', 'node_modules', 
+        '.vscode', 'site-packages', 'Lib', 'Scripts', 'assets', 'images', 'css', 'js',
+        'reports', '_Organized_Output', 'System Volume Information'
+    }
+
+    TARGET_EXTENSIONS: Set[str] = {'.pdf', '.docx', '.doc'}
+
+    KEYWORDS_NEGATIVE: List[str] = [
+        "statement", "invoice", "receipt", "lease", "agreement", 
+        "contract", "payment", "study guide", "textbook", "exam", 
+        "tutorial", "assignment", "transcript", "ticket", "cheque",
+        "curriculum_plan", "id_copy", "matric", "template", "flyer",
+        "udemy", "course resource"
+    ]
+
+    FOLDER_JOB_MAP: Dict[str, str] = {
+        "ADMINISTRATION_CLERK": "Administration_Clerk",
+        "ADMIN_CLERK": "Administration_Clerk",
+        "REGIONAL_COURT": "Regional_Court_Prosecutor",
+        "DISTRICT_COURT": "District_Court_Prosecutor",
+        "PROSECUTOR": "Public_Prosecutor",
+        "SECRETARY": "Secretary",
+        "JUDGE": "Judges_Secretary",
+        "LEGAL_ADMIN": "Legal_Admin_Officer",
+        "STATE_LAW": "State_Law_Advisor",
+        "CANDIDATE": "Candidate_Attorney",
+        "ATTORNEY": "Candidate_Attorney",
+        "INTERNSHIP": "Legal_Internship",
+        "REGISTRAR": "Registrar",
+        "CLERK": "Clerk"
+    }
+
+    LAW_FIRMS: List[str] = [
+        "ENS", "WEBBER", "BOWMANS", "CLIFFE", "DEKKER", "HOFMEYR", 
+        "WERKSMANS", "NORTON", "ROSE", "FASKEN", "HOGAN", "LOVELLS",
+        "MACROBERT", "ADAMS", "SPOOR", "FISHER", "STRAUSS", "DALY",
+        "ATTORNEYS", "INC", "LAW"
+    ]
+
+    @classmethod
+    def load_from_file(cls, path: Path):
+        if path.exists():
+            with open(path, 'r') as f:
+                data = json.load(f)
+                # Update attributes if present in json
+                for key, value in data.items():
+                    if hasattr(cls, key):
+                        setattr(cls, key, value)
+
+
+================================================================================
+FILE: fileflow\tui.py
+================================================================================
+
+from textual.app import App, ComposeResult
+from textual.containers import Container, Horizontal, Vertical
+from textual.widgets import Header, Footer, DirectoryTree, DataTable, Button, Label, RichLog, Static
+from textual.binding import Binding
+from textual import on
+from pathlib import Path
+import os
+from fileflow.core.scanner import Scanner
+from fileflow.core.organizer import Organizer, MoveLogger
+
+class FileFlowApp(App):
+    CSS = """
+    Screen {
+        layout: horizontal;
+    }
+    #sidebar {
+        width: 30%;
+        height: 100%;
+        dock: left;
+        border-right: solid green;
+    }
+    #main {
+        width: 70%;
+        height: 100%;
+        padding: 1;
+    }
+    #actions {
+        height: auto;
+        dock: bottom;
+        padding: 1;
+        background: $boost;
+    }
+    DataTable {
+        height: 1fr;
+        border: solid cyan;
+    }
+    RichLog {
+        height: 20%;
+        border-top: solid yellow;
+        background: $surface;
+    }
+    .hidden {
+        display: none;
+    }
+    """
+
+    BINDINGS = [
+        Binding("q", "quit", "Quit"),
+        Binding("s", "scan", "Scan Selected"),
+        Binding("o", "organize", "Organize"),
+    ]
+
+    def compose(self) -> ComposeResult:
+        yield Header()
+        
+        with Container(id="sidebar"):
+            yield Label("📁 Select Folder to Scan:")
+            yield DirectoryTree(os.path.expanduser("~\\Desktop"))
+        
+        with Vertical(id="main"):
+            yield Label("📄 Scanned Files")
+            yield DataTable(id="results_table")
+            yield RichLog(id="log", highlight=True, markup=True)
+            
+            with Horizontal(id="actions"):
+                yield Button("🔍 Scan Selected", id="btn_scan", variant="primary")
+                yield Button("🚀 Organize Files", id="btn_organize", variant="success", disabled=True)
+                yield Button("↩️ Undo Last", id="btn_undo", variant="warning")
+
+        yield Footer()
+
+    def on_mount(self) -> None:
+        table = self.query_one(DataTable)
+        table.add_columns("Filename", "Detected Position", "Applicant", "Date", "Path")
+        self.scanned_files = []
+        self.selected_path = Path(os.path.expanduser("~\\Desktop"))
+
+    @on(DirectoryTree.DirectorySelected)
+    def handle_dir_select(self, event: DirectoryTree.DirectorySelected):
+        self.selected_path = event.path
+        self.query_one(RichLog).write(f"[cyan]Selected: {self.selected_path}[/cyan]")
+
+    @on(Button.Pressed, "#btn_scan")
+    def action_scan(self):
+        log = self.query_one(RichLog)
+        table = self.query_one(DataTable)
+        
+        if not self.selected_path or not self.selected_path.exists():
+            log.write("[red]Invalid folder selected![/red]")
+            return
+
+        log.write(f"[bold green]Scanning {self.selected_path}...[/bold green]")
+        table.clear()
+        self.scanned_files = []
+        
+        # Run scan (synchronous for now, could be threaded)
+        results = Scanner.scan_directory(self.selected_path, recursive=True)
+        
+        count = 0
+        for folder, files in results.items():
+            for f in files:
+                meta = f['metadata']
+                table.add_row(
+                    f['name'],
+                    meta.get('position', '?'),
+                    meta.get('applicant', '?'),
+                    f['date'].strftime("%Y-%m-%d"),
+                    f['path']
+                )
+                self.scanned_files.append(f)
+                count += 1
+        
+        log.write(f"[green]Found {count} files.[/green]")
+        if count > 0:
+            self.query_one("#btn_organize").disabled = False
+
+    @on(Button.Pressed, "#btn_organize")
+    def action_organize(self):
+        log = self.query_one(RichLog)
+        if not self.scanned_files:
+            log.write("[yellow]No files to organize.[/yellow]")
+            return
+
+        dest_base = self.selected_path / "_Organized_Output"
+        log.write(f"[bold yellow]Organizing to {dest_base}...[/bold yellow]")
+        
+        success_count = 0
+        for f in self.scanned_files:
+            success, msg = Organizer.organize_file(f, dest_base, dry_run=False)
+            if success:
+                success_count += 1
+                # log.write(f"[dim]Moved {f['name']}[/dim]")
+            else:
+                log.write(f"[red]Failed {f['name']}: {msg}[/red]")
+        
+        log.write(f"[bold green]Done! Organized {success_count} files.[/bold green]")
+        self.query_one("#btn_organize").disabled = True
+        self.scanned_files = [] # Clear after organize
+        self.query_one(DataTable).clear()
+
+    @on(Button.Pressed, "#btn_undo")
+    def action_undo(self):
+        log = self.query_one(RichLog)
+        success, msg = MoveLogger.undo_last_move()
+        if success:
+            log.write(f"[green]Undo: {msg}[/green]")
+        else:
+            log.write(f"[red]Undo Failed: {msg}[/red]")
+
+if __name__ == "__main__":
+    app = FileFlowApp()
+    app.run()
+
+
+================================================================================
+FILE: fileflow\__init__.py
+================================================================================
+
+
+
+================================================================================
+FILE: fileflow\core\extractor.py
+================================================================================
+
+import re
+from pathlib import Path
+from typing import Dict, Optional, Any
+from datetime import datetime
+import PyPDF2
+from fileflow.config import Config
+
+class ContextExtractor:
+    @staticmethod
+    def extract_date_from_string(text: str) -> Optional[datetime]:
+        match = re.search(r'(202[3-9])(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])', text)
+        if match:
+            try:
+                return datetime.strptime(match.group(0), "%Y%m%d")
+            except: pass
+        return None
+
+    @staticmethod
+    def extract_from_filename(filename: str) -> Dict[str, str]:
+        applicant = None
+        position = None
+        fname_lower = filename.lower()
+        
+        if "rex" in fname_lower: applicant = "Rex_Stone"
+        elif "sandiso" in fname_lower: applicant = "Sandiso_Mazibuko"
+        
+        for key, value in Config.FOLDER_JOB_MAP.items():
+            if key.lower() in fname_lower:
+                position = value
+                break
+        
+        return {"applicant": applicant, "position": position}
+
+    @staticmethod
+    def analyze_path_context(file_path: Path) -> Dict[str, Any]:
+        parent = file_path.parent.name
+        grandparent = file_path.parent.parent.name
+        
+        inferred_position = None
+        inferred_date = None
+
+        for key, value in Config.FOLDER_JOB_MAP.items():
+            if key in parent.upper():
+                inferred_position = value
+                break
+        
+        if not inferred_position:
+            for firm in Config.LAW_FIRMS:
+                if firm in parent.upper():
+                    inferred_position = "Candidate_Attorney"
+                    break
+
+        if not inferred_position and "DEPARTMENT" in parent.upper():
+            clean_name = re.sub(r'^\d+_', '', parent)
+            inferred_position = f"App_{clean_name[:30]}"
+
+        date_found = ContextExtractor.extract_date_from_string(parent)
+        if not date_found:
+            date_found = ContextExtractor.extract_date_from_string(grandparent)
+        
+        if date_found:
+            inferred_date = date_found
+
+        return {
+            "position": inferred_position,
+            "date": inferred_date
+        }
+
+class PDFExtractor:
+    @staticmethod
+    def extract_metadata(pdf_path: Path) -> Optional[Dict[str, Any]]:
+        try:
+            with open(pdf_path, 'rb') as file:
+                reader = PyPDF2.PdfReader(file)
+                text = ""
+                # Read first few pages
+                for i in range(min(3, len(reader.pages))):
+                    text += reader.pages[i].extract_text()
+            
+            metadata = {}
+            
+            # 1. Position Extraction
+            # Check known mappings first
+            text_upper = text.upper()
+            for key, value in Config.FOLDER_JOB_MAP.items():
+                if key.replace('_', ' ') in text_upper:
+                    metadata['position'] = value
+                    break
+            
+            if 'position' not in metadata:
+                 # Regex fallback for Z83/Generic
+                pos_match = re.search(
+                    r'(?:Position for which you are applying|JUDGE\'S SECRETARY|STATE LAW ADVISOR|LEGAL ADMIN OFFICER)',
+                    text, re.IGNORECASE
+                )
+                if pos_match:
+                     # Refine this if needed, for now trust the map more
+                     pass
+
+            # 2. Applicant Extraction
+            if "REX" in text_upper and "STONE" in text_upper: metadata['applicant'] = "Rex_Stone"
+            elif "SANDISO" in text_upper: metadata['applicant'] = "Sandiso_Mazibuko"
+            
+            # Z83 Name extraction fallback
+            if 'applicant' not in metadata:
+                name_pattern = r'(?:Surname and Full names|SURNAME).*?:\s*([A-Za-z\s]+?)(?:\n|Date of Birth)'
+                name_match = re.search(name_pattern, text)
+                if name_match:
+                    name = name_match.group(1).strip()
+                    metadata['applicant'] = re.sub(r'\s+', '_', name)
+
+            return metadata
+        except Exception:
+            return None
+
+class UnifiedExtractor:
+    @staticmethod
+    def get_metadata(file_path: Path) -> Dict[str, Any]:
+        final_meta = {
+            'applicant': "Unknown_Applicant",
+            'position': "General_Application",
+            'source': "default",
+            'final_date': None
+        }
+
+        # 1. Filename Analysis
+        name_meta = ContextExtractor.extract_from_filename(file_path.name)
+        if name_meta['applicant']: final_meta['applicant'] = name_meta['applicant']
+        if name_meta['position']: 
+            final_meta['position'] = name_meta['position']
+            final_meta['source'] = "filename"
+
+        # 2. PDF Content Analysis (Stronger signal for Position/Applicant)
+        if file_path.suffix.lower() == '.pdf':
+            pdf_meta = PDFExtractor.extract_metadata(file_path)
+            if pdf_meta:
+                if pdf_meta.get('applicant'): final_meta['applicant'] = pdf_meta['applicant']
+                if pdf_meta.get('position'): 
+                    final_meta['position'] = pdf_meta['position']
+                    final_meta['source'] = "pdf_content"
+
+        # 3. Folder Context Analysis (Fallback for Position, Primary for Date)
+        context = ContextExtractor.analyze_path_context(file_path)
+        
+        if final_meta['position'] == "General_Application" and context['position']:
+            final_meta['position'] = context['position']
+            final_meta['source'] = "folder_context"
+
+        # Date priority: Context > File Mod Time (handled by scanner)
+        final_meta['final_date'] = context['date']
+        
+        return final_meta
+
+
+================================================================================
+FILE: fileflow\core\organizer.py
+================================================================================
+
+import shutil
+import json
+from pathlib import Path
+from typing import List, Dict, Any, Tuple
+from datetime import datetime
+
+class MoveLogger:
+    LOG_FILE = Path.home() / '.fileflow_moves.jsonl'
+    
+    @staticmethod
+    def log_move(src: str, dst: str, position: str, applicant: str) -> None:
+        entry = {
+            "timestamp": datetime.now().isoformat(),
+            "source": src,
+            "destination": dst,
+            "position": position,
+            "applicant": applicant
+        }
+        try:
+            with open(MoveLogger.LOG_FILE, 'a') as f:
+                f.write(json.dumps(entry) + '\n')
+        except Exception:
+            pass
+    
+    @staticmethod
+    def undo_last_move() -> Tuple[bool, str]:
+        if not MoveLogger.LOG_FILE.exists():
+            return False, "No log file found."
+        
+        lines = []
+        with open(MoveLogger.LOG_FILE, 'r') as f:
+            lines = f.readlines()
+            
+        if not lines:
+            return False, "Log file is empty."
+            
+        last_line = lines[-1]
+        try:
+            move = json.loads(last_line)
+            dst = Path(move['destination'])
+            src = Path(move['source'])
+            
+            if not dst.exists():
+                return False, f"Destination file missing: {dst}"
+                
+            src.parent.mkdir(parents=True, exist_ok=True)
+            shutil.move(str(dst), str(src))
+            
+            # Remove last line
+            with open(MoveLogger.LOG_FILE, 'w') as f:
+                f.writelines(lines[:-1])
+                
+            return True, f"Restored {src.name}"
+        except Exception as e:
+            return False, str(e)
+
+class Organizer:
+    @staticmethod
+    def generate_new_filename(
+        applicant: str,
+        position: str,
+        date_obj: datetime,
+        existing_count: int = 0
+    ) -> str:
+        date_str = date_obj.strftime("%Y%m%d")
+        version = existing_count + 1
+        return f"{applicant}_{position}_{date_str}_v{version}.pdf"
+
+    @staticmethod
+    def organize_file(
+        file_info: Dict[str, Any], 
+        dest_base: Path, 
+        dry_run: bool = False
+    ) -> Tuple[bool, str]:
+        """
+        Moves a single file to the organized destination.
+        Returns (success, message/new_path).
+        """
+        meta = file_info['metadata']
+        if not meta:
+            return False, "No metadata extracted"
+
+        applicant = meta.get('applicant', 'Unknown')
+        position = meta.get('position', 'General')
+        date_obj = file_info['date']
+        
+        # Clean strings
+        position = position.replace(' ', '_').replace('/', '-')
+        applicant = applicant.replace(' ', '_')
+
+        dest_folder = dest_base / position
+        
+        if not dry_run:
+            dest_folder.mkdir(parents=True, exist_ok=True)
+
+        # Versioning
+        date_str = date_obj.strftime("%Y%m%d")
+        pattern = f"{applicant}_{position}_{date_str}_v*.pdf"
+        
+        # Check existing in destination (real check)
+        existing = list(dest_folder.glob(pattern)) if dest_folder.exists() else []
+        version = len(existing)
+        
+        new_name = Organizer.generate_new_filename(applicant, position, date_obj, version)
+        dest_path = dest_folder / new_name
+        
+        if dry_run:
+            return True, str(dest_path)
+            
+        try:
+            shutil.copy2(file_info['path'], dest_path) # Copy first
+            MoveLogger.log_move(file_info['path'], str(dest_path), position, applicant)
+            return True, str(dest_path)
+        except Exception as e:
+            return False, str(e)
+
+
+================================================================================
+FILE: fileflow\core\profiles.py
+================================================================================
+
+import json
+from pathlib import Path
+from typing import Dict, Any, List
+from datetime import datetime
+
+class ProfileManager:
+    PROFILES_FILE = Path.home() / '.fileflow_profiles.json'
+    
+    @staticmethod
+    def load_profiles() -> Dict[str, Dict[str, Any]]:
+        if ProfileManager.PROFILES_FILE.exists():
+            try:
+                with open(ProfileManager.PROFILES_FILE, 'r') as f:
+                    return json.load(f)
+            except:
+                return {}
+        return {}
+    
+    @staticmethod
+    def save_profiles(profiles: Dict) -> None:
+        with open(ProfileManager.PROFILES_FILE, 'w') as f:
+            json.dump(profiles, f, indent=2)
+            
+    @staticmethod
+    def create_profile(name: str, folders: List[str]) -> Dict[str, Any]:
+        return {
+            "folders": folders,
+            "created": datetime.now().isoformat()
+        }
+
+
+================================================================================
+FILE: fileflow\core\scanner.py
+================================================================================
+
+import os
+from pathlib import Path
+from typing import List, Dict, Any, Optional
+from datetime import datetime
+from fileflow.config import Config
+from fileflow.core.extractor import UnifiedExtractor
+
+class Scanner:
+    @staticmethod
+    def is_wanted_file(filename: str) -> bool:
+        name_lower = filename.lower()
+        for junk in Config.KEYWORDS_NEGATIVE:
+            if junk in name_lower: return False
+        return True 
+
+    @staticmethod
+    def scan_directory(
+        root_path: Path, 
+        recursive: bool = True,
+        callback=None
+    ) -> Dict[str, List[Dict]]:
+        """
+        Scans directory and returns results grouped by relative folder path.
+        callback(str): Optional function to report progress (current folder name).
+        """
+        results = {}
+        
+        # Walk
+        walker = os.walk(root_path, topdown=True) if recursive else [(str(root_path), [], [f.name for f in root_path.iterdir() if f.is_file()])]
+        
+        for root, dirs, files in walker:
+            # Filter dirs in-place
+            dirs[:] = [d for d in dirs if d not in Config.IGNORED_SYSTEM_DIRS and not d.startswith('.')]
+            
+            if callback:
+                callback(Path(root).name)
+
+            for filename in files:
+                file_path = Path(root) / filename
+                
+                if file_path.suffix.lower() not in Config.TARGET_EXTENSIONS: continue
+                if not Scanner.is_wanted_file(filename): continue
+
+                try:
+                    stat = file_path.stat()
+                    phys_date = datetime.fromtimestamp(stat.st_mtime)
+                    
+                    # Extraction
+                    meta = UnifiedExtractor.get_metadata(file_path)
+                    final_date = meta['final_date'] if meta['final_date'] else phys_date
+                    
+                    # Grouping Key (Relative Path)
+                    try:
+                        rel_path = str(Path(root).relative_to(root_path))
+                    except ValueError:
+                        rel_path = str(Path(root))
+
+                    if rel_path not in results: results[rel_path] = []
+                    
+                    results[rel_path].append({
+                        'path': str(file_path),
+                        'name': filename,
+                        'date': final_date,
+                        'metadata': meta,
+                        'size': stat.st_size
+                    })
+                except Exception as e:
+                    # print(f"Error scanning {filename}: {e}")
+                    pass
+                    
+        return results
+
+
+================================================================================
+FILE: fileflow\core\__init__.py
+================================================================================
+
+
