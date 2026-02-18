@@ -126,8 +126,9 @@ ai:
   summarise_model: "smollm2:1.7b"
 
   # The Eye: vision model for image understanding
-  # Benchmark winner: 57% accuracy (best available), 13687ms
-  vision_model: "granite3.2-vision:latest"
+  # Real-world test winner: gemma3:4b — clean extraction, no hallucination
+  # (granite3.2-vision was text-proxy benchmark winner but gemma3:4b won on real images)
+  vision_model: "gemma3:4b"
 
   # Confidence threshold: below this, V8 result is escalated to the SLM
   triage_confidence_threshold: 0.7

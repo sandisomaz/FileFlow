@@ -3,17 +3,20 @@
 run_benchmark.py — FileFlow Model Benchmark Runner
 FileFlow Cognition V9
 
-Runs the model benchmark and optionally applies winners to settings.yaml.
+Tests ALL installed Ollama models against FileFlow's AI tasks and finds the best
+model for each. Models are auto-discovered from Ollama — no hardcoded lists.
 
 Usage:
-    python run_benchmark.py                    # All 4 tasks
+    python run_benchmark.py                    # All 4 tasks, all installed models
+    python run_benchmark.py --plan             # Preview which models will be tested
     python run_benchmark.py --task classify    # Classification only
-    python run_benchmark.py --task embed       # Embedding only (fastest, ~2 min)
+    python run_benchmark.py --task embed       # Embedding only (~2 min)
     python run_benchmark.py --task summarise   # Summarisation only
     python run_benchmark.py --task vision      # Vision only
     python run_benchmark.py --apply            # Run all + apply winners to settings.yaml
     python run_benchmark.py --save             # Save reports to reports/
     python run_benchmark.py --image path.jpg   # Use a specific image for vision test
+    python run_benchmark.py --runs 3           # 3 runs per fixture (more reliable)
 """
 
 import argparse
@@ -21,7 +24,6 @@ import sys
 import time
 from pathlib import Path
 
-# Ensure the project root is on the path
 sys.path.insert(0, str(Path(__file__).parent))
 
 from fileflow.intelligence.benchmark import Benchmark
@@ -30,7 +32,7 @@ from fileflow.intelligence.benchmark import Benchmark
 BANNER = """
 ╔══════════════════════════════════════════════════════════════╗
 ║         FileFlow Cognition V9 — Model Benchmark             ║
-║         Finding the best model for each task                 ║
+║         Testing ALL installed models — no assumptions        ║
 ╚══════════════════════════════════════════════════════════════╝
 """
 
@@ -44,7 +46,7 @@ TASK_DESCRIPTIONS = {
 
 def main():
     parser = argparse.ArgumentParser(
-        description="FileFlow Model Benchmark — find the best model for each task",
+        description="FileFlow Model Benchmark — tests ALL installed Ollama models",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=__doc__,
     )
@@ -53,6 +55,11 @@ def main():
         choices=["classify", "embed", "summarise", "vision", "all"],
         default="all",
         help="Which task to benchmark (default: all)",
+    )
+    parser.add_argument(
+        "--plan",
+        action="store_true",
+        help="Preview which models will be tested for each task, then exit",
     )
     parser.add_argument(
         "--apply",
@@ -87,6 +94,26 @@ def main():
     print(BANNER)
 
     bench = Benchmark(base_url=args.url)
+
+    # --plan: show what will be tested and exit
+    if args.plan:
+        installed = bench.get_installed_models()
+        print(f"  📦 {len(installed)} models installed in Ollama\n")
+        chat = bench.get_chat_models()
+        embed = bench.get_embed_models()
+        vision = bench.get_vision_models()
+        print(f"  🗂️  Classification & Summarisation ({len(chat)} models):")
+        for m in chat:
+            print(f"      {m}")
+        print(f"\n  🔢 Embedding ({len(embed)} models):")
+        for m in embed:
+            print(f"      {m}")
+        print(f"\n  👁️  Vision ({len(vision)} models):")
+        for m in vision:
+            print(f"      {m}")
+        print()
+        return
+
     test_image = Path(args.image) if args.image else None
     reports = {}
     t_total_start = time.monotonic()
@@ -96,6 +123,9 @@ def main():
         if args.task == "all"
         else [args.task]
     )
+
+    # Show model plan before starting
+    bench.print_model_plan()
 
     for task in tasks_to_run:
         print(f"\n{'=' * 62}")
@@ -139,7 +169,7 @@ def main():
             winner_result = next((r for r in report.results if r.model == report.winner), None)
             if winner_result:
                 print(
-                    f"    {task:<15} → {report.winner:<30} "
+                    f"    {task:<15} → {report.winner:<35} "
                     f"(accuracy={winner_result.accuracy:.0%}, "
                     f"latency={winner_result.avg_latency_ms:.0f}ms)"
                 )

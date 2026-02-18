@@ -140,49 +140,83 @@ class Benchmark:
     """
     Runs candidate models against known test cases and reports winners
     across all 4 FileFlow AI task types.
+
+    By default, auto-discovers all installed Ollama models and tests
+    the appropriate ones for each task. Pass models= to override.
     """
 
-    # Models to test per task — ordered smallest → largest for speed
-    CLASSIFY_CANDIDATES = [
-        "qwen2.5:0.5b",
-        "qwen2.5:1.5b",
-        "qwen3:0.6b",
-        "gemma3:270m",
-        "smollm2:1.7b",
-        "gemma3:1b",
-        "qwen3:1.7b",
-        "qwen2.5:3b",
-        "cogito:3b",
-        "phi3:3.8b",
-    ]
+    # Vision-capable model name patterns
+    _VISION_PATTERNS = ["vl", "vision", "llava", "moondream", "gemma3"]
 
-    EMBED_CANDIDATES = [
-        "nomic-embed-text",
-        "qwen3-embedding:0.6b",
-        "qwen3-embedding:4b",
-        "qwen3-embedding:8b",
-    ]
+    # Embedding model name patterns
+    _EMBED_PATTERNS = ["embed", "nomic"]
 
-    SUMMARISE_CANDIDATES = [
-        "qwen2.5:0.5b",
-        "qwen2.5:1.5b",
-        "qwen3:0.6b",
-        "gemma3:1b",
-        "qwen3:1.7b",
-        "smollm2:1.7b",
-        "ministral-3:3b",
-    ]
+    # Models to EXCLUDE from chat tasks (they're embedding-only or vision-only)
+    _CHAT_EXCLUDE_PATTERNS = ["embed", "nomic"]
 
-    VISION_CANDIDATES = [
-        "moondream:latest",
-        "llava-phi3:3.8b",
-        "qwen3-vl:2b",
-        "qwen3-vl:4b",
-        "granite3.2-vision:latest",
-    ]
+    # Fallback lists if Ollama is unreachable
+    _FALLBACK_CLASSIFY = ["qwen2.5:0.5b", "qwen2.5:1.5b", "gemma3:1b", "smollm2:1.7b"]
+    _FALLBACK_EMBED    = ["nomic-embed-text", "qwen3-embedding:0.6b", "qwen3-embedding:4b"]
+    _FALLBACK_SUMMARISE = ["qwen2.5:1.5b", "smollm2:1.7b", "gemma3:1b"]
+    _FALLBACK_VISION   = ["moondream:latest", "llava-phi3:3.8b", "gemma3:4b"]
 
     def __init__(self, base_url: str = "http://localhost:11434"):
         self.base_url = base_url
+        self._installed_cache: Optional[List[str]] = None
+
+    # ------------------------------------------------------------------
+    # Model Discovery
+    # ------------------------------------------------------------------
+
+    def get_installed_models(self) -> List[str]:
+        """Returns all model names currently installed in Ollama, sorted by size."""
+        if self._installed_cache is not None:
+            return self._installed_cache
+        try:
+            import requests as _req
+            resp = _req.get(f"{self.base_url}/api/tags", timeout=5)
+            if resp.status_code == 200:
+                models = resp.json().get("models", [])
+                # Sort by size ascending (smallest first = fastest first)
+                models.sort(key=lambda m: m.get("size", 0))
+                self._installed_cache = [m["name"] for m in models]
+                return self._installed_cache
+        except Exception as e:
+            logger.debug(f"[Benchmark] Could not fetch installed models: {e}")
+        return []
+
+    def get_chat_models(self) -> List[str]:
+        """All installed models suitable for text generation tasks."""
+        installed = self.get_installed_models()
+        return [
+            m for m in installed
+            if not any(p in m.lower() for p in self._CHAT_EXCLUDE_PATTERNS)
+            and not any(p in m.lower() for p in self._VISION_PATTERNS)
+        ]
+
+    def get_vision_models(self) -> List[str]:
+        """All installed models with vision capability."""
+        installed = self.get_installed_models()
+        return [
+            m for m in installed
+            if any(p in m.lower() for p in self._VISION_PATTERNS)
+        ]
+
+    def get_embed_models(self) -> List[str]:
+        """All installed embedding models."""
+        installed = self.get_installed_models()
+        return [
+            m for m in installed
+            if any(p in m.lower() for p in self._EMBED_PATTERNS)
+        ]
+
+    def print_model_plan(self) -> None:
+        """Prints which models will be tested for each task."""
+        print("\n  📋 Models to test:")
+        print(f"  Classification/Summarisation: {self.get_chat_models() or self._FALLBACK_CLASSIFY}")
+        print(f"  Embedding:                    {self.get_embed_models() or self._FALLBACK_EMBED}")
+        print(f"  Vision:                       {self.get_vision_models() or self._FALLBACK_VISION}")
+        print()
 
     # ------------------------------------------------------------------
     # 1. Classification
@@ -194,7 +228,7 @@ class Benchmark:
         runs_per_fixture: int = 2,
     ) -> BenchmarkReport:
         """Tests which model best classifies documents into the archive taxonomy."""
-        candidates = models or self.CLASSIFY_CANDIDATES
+        candidates = models or self.get_chat_models() or self._FALLBACK_CLASSIFY
         candidates = self._filter_available(candidates)
 
         print(f"\n  Testing {len(candidates)} models × {len(CLASSIFICATION_FIXTURES)} fixtures × {runs_per_fixture} runs...")
@@ -266,7 +300,7 @@ class Benchmark:
         - Speed (latency)
         - Semantic coherence (similar docs should have similar embeddings)
         """
-        candidates = models or self.EMBED_CANDIDATES
+        candidates = models or self.get_embed_models() or self._FALLBACK_EMBED
         candidates = self._filter_available(candidates)
 
         # Two semantically similar and one dissimilar text
@@ -358,7 +392,7 @@ class Benchmark:
         Tests which model writes the best one-sentence document summaries.
         Scores based on: keyword coverage, length appropriateness, and consistency.
         """
-        candidates = models or self.SUMMARISE_CANDIDATES
+        candidates = models or self.get_chat_models() or self._FALLBACK_SUMMARISE
         candidates = self._filter_available(candidates)
 
         print(f"\n  Testing {len(candidates)} models × {len(SUMMARISATION_FIXTURES)} fixtures...")
@@ -451,7 +485,7 @@ class Benchmark:
         Tests vision models on their ability to describe scanned documents.
         Uses a test image if provided, otherwise uses a synthetic prompt.
         """
-        candidates = models or self.VISION_CANDIDATES
+        candidates = models or self.get_vision_models() or self._FALLBACK_VISION
         candidates = self._filter_available(candidates)
 
         print(f"\n  Testing {len(candidates)} vision models...")
