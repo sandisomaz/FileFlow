@@ -57,8 +57,14 @@ def forensic_worker(path_str):
         return None
 
 class StagingManager:
-    def __init__(self, extractor):
+    def __init__(self, extractor, judge=None):
+        """
+        Args:
+            extractor: UnifiedExtractor (V8 rule engine) — always required
+            judge:     Judge (V9 AI decision engine) — optional, graceful fallback if None
+        """
         self.extractor = extractor
+        self.judge = judge  # V9 Cognition: The Decision Engine
         self.staged_files: Dict[str, List[StagedFile]] = {}
         self.all_hashes: Dict[str, List[Path]] = {}
 
@@ -93,12 +99,39 @@ class StagingManager:
              self._quarantine(file_path, "Corrupted_and_Unscrapeable", size=file_size)
              return
 
-        
         # Hashing for deduplication (crucial for recovered files)
         f_hash = hashlib.md5(extracted_text.encode() if extracted_text else file_path.name.encode()).hexdigest()
         
         entity = content_meta.get('entity', parent_name)
-        
+
+        # ---------------------------------------------------------------
+        # V9 COGNITION: Ask the Judge for a ruling
+        # The Judge enriches metadata with an AI category.
+        # Falls back silently to V8 behaviour if judge is None or offline.
+        # ---------------------------------------------------------------
+        ai_category = None
+        ai_confidence = None
+        ai_reasoning = None
+        ai_path = None
+
+        if self.judge is not None:
+            try:
+                ruling = self.judge.rule(
+                    file_path=file_path,
+                    extracted_text=extracted_text or "",
+                    folder_hint=parent_name,
+                )
+                ai_category = ruling.category
+                ai_confidence = ruling.confidence
+                ai_reasoning = ruling.reasoning
+                ai_path = ruling.path
+                # If the Judge is confident and the SLM gave us a better entity, use it
+                if ruling.path == "slow" and ruling.confidence >= 0.75 and ruling.entity:
+                    entity = ruling.entity
+            except Exception as e:
+                import logging
+                logging.getLogger(__name__).warning(f"[StagingManager] Judge failed for {file_path.name}: {e}")
+
         is_dup = False
         duplicate_of = None
         if f_hash in self.all_hashes:
@@ -108,7 +141,16 @@ class StagingManager:
         else:
             self.all_hashes[f_hash] = [file_path]
         
-        final_meta = {**content_meta, "sub_type": sub_type, "entity": entity}
+        final_meta = {
+            **content_meta,
+            "sub_type": sub_type,
+            "entity": entity,
+            # V9 enrichment fields (None if AI unavailable)
+            "ai_category": ai_category,
+            "ai_confidence": ai_confidence,
+            "ai_reasoning": ai_reasoning,
+            "ai_path": ai_path,
+        }
         
         staged = StagedFile(
             path=file_path, 

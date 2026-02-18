@@ -27,6 +27,10 @@ from fileflow.operations.executor import AtomicExecutor
 from fileflow.operations.janitor import PruneExecutor
 from fileflow.ui.dashboard import Dashboard
 
+# V9 Cognition Imports
+from fileflow.intelligence.bridge import Bridge
+from fileflow.intelligence.judge import Judge
+
 from fileflow.core.logger import SessionLogger, MigrationLogger, setup_forensic_logging
 
 # Configure System Logging (Silence Terminal)
@@ -66,6 +70,16 @@ def main():
         action="store_true",
         help="Level 2 Forensic Diagnostic: Read-only deep audit of file metadata."
     )
+    parser.add_argument(
+        "--no-ai",
+        action="store_true",
+        help="Disable AI Judge (run in pure V8 rule-based mode)"
+    )
+    parser.add_argument(
+        "--benchmark",
+        action="store_true",
+        help="Run model benchmark and exit"
+    )
     
     args = parser.parse_args()
     
@@ -89,13 +103,40 @@ def main():
         if args.dry_run or args.audit:
             is_dry_run = True
         
+        # Handle benchmark mode
+        if args.benchmark:
+            from fileflow.intelligence.benchmark import Benchmark
+            bench = Benchmark()
+            console.print("\n[bold cyan]📊 Running Classification Benchmark...[/bold cyan]")
+            report = bench.run_classification()
+            console.print(f"\n[bold green]🏆 Winner: {report.winner}[/bold green]")
+            console.print(f"[cyan]{report.recommendation}[/cyan]")
+            bench.save_report(report)
+            return
+
         # 1. Initialize Components
         dashboard = Dashboard()
         dashboard.display_welcome()
         
         config = ConfigLoader()
         extractor = UnifiedExtractor()
-        staging = StagingManager(extractor)
+
+        # V9 Cognition: Initialise the Bridge and Judge
+        judge = None
+        if not args.no_ai:
+            bridge = Bridge(
+                slm_model="qwen2.5:1.5b",
+                embed_model="nomic-embed-text",
+            )
+            if bridge.is_healthy():
+                judge = Judge(bridge=bridge, extractor=extractor)
+                console.print("[bold green]🧠 Cognition ONLINE[/bold green] — AI Judge active")
+            else:
+                console.print("[yellow]⚡ Cognition OFFLINE[/yellow] — Running in V8 rule-based mode")
+        else:
+            console.print("[dim]AI disabled (--no-ai flag)[/dim]")
+
+        staging = StagingManager(extractor, judge=judge)
         executor = AtomicExecutor(dry_run=is_dry_run)
         
         source_paths = [Path(s).resolve() for s in args.sources]

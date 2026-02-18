@@ -106,3 +106,32 @@ execution:
   verify_copies: true
   atomic_operations: true
   log_level: "INFO"
+
+# =============================================================================
+# V9 COGNITION — AI Configuration
+# =============================================================================
+ai:
+  enabled: true
+  ollama_url: "http://localhost:11434"
+
+  # The Judge: classifies ambiguous files the rule engine can't handle
+  slm_model: "qwen2.5:1.5b"
+
+  # The Inspector/Memory: embeds documents for semantic search
+  embed_model: "nomic-embed-text"
+
+  # Confidence threshold: below this, V8 result is escalated to the SLM
+  triage_confidence_threshold: 0.7
+
+  # Semantic deduplication threshold (Phase 3)
+  semantic_dedup_threshold: 0.95
+
+  # Where the vector memory (LanceDB) lives
+  vector_store_path: "fileflow_data/vectors.lance"
+
+# Archive taxonomy — the three sovereign destinations
+archive_taxonomy:
+  Professional: "C:/Users/sandi/Desktop/Professional_Archive"
+  Life_Admin: "C:/Users/sandi/Desktop/Life_Admin"
+  Dev_Workshop: "C:/Users/sandi/Desktop/Dev_Workshop"
+  Educational: "C:/Users/sandi/Desktop/Educational"
