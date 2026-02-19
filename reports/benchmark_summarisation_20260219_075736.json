@@ -1,0 +1,320 @@
+{
+  "timestamp": "2026-02-19T07:57:36",
+  "task": "summarisation",
+  "winner": "qwen2.5:3b",
+  "recommendation": "Use 'qwen2.5:3b' for summarisation. Keyword coverage: 100%, Latency: 7547ms",
+  "results": [
+    {
+      "model": "qwen2.5:3b",
+      "task": "summarisation",
+      "accuracy": 1.0,
+      "avg_latency_ms": 7546.833333331354,
+      "consistency": 0.9166666666666666,
+      "correct": 3,
+      "total": 3,
+      "score": 0.8469149996626119,
+      "failures": [],
+      "notes": ""
+    },
+    {
+      "model": "granite3.1-moe:latest",
+      "task": "summarisation",
+      "accuracy": 1.0,
+      "avg_latency_ms": 5161.500000001979,
+      "consistency": 0.8333333333333334,
+      "correct": 3,
+      "total": 3,
+      "score": 0.8376309226585169,
+      "failures": [],
+      "notes": ""
+    },
+    {
+      "model": "smollm2:360m",
+      "task": "summarisation",
+      "accuracy": 1.0,
+      "avg_latency_ms": 6158.833333334769,
+      "consistency": 0.8333333333333334,
+      "correct": 3,
+      "total": 3,
+      "score": 0.8340442334696616,
+      "failures": [],
+      "notes": ""
+    },
+    {
+      "model": "gemma2:2b",
+      "task": "summarisation",
+      "accuracy": 1.0,
+      "avg_latency_ms": 6192.666666669538,
+      "consistency": 0.8333333333333334,
+      "correct": 3,
+      "total": 3,
+      "score": 0.833937379748401,
+      "failures": [],
+      "notes": ""
+    },
+    {
+      "model": "smollm2:1.7b",
+      "task": "summarisation",
+      "accuracy": 1.0,
+      "avg_latency_ms": 6395.833333333333,
+      "consistency": 0.8333333333333334,
+      "correct": 3,
+      "total": 3,
+      "score": 0.8333129667001747,
+      "failures": [],
+      "notes": ""
+    },
+    {
+      "model": "qwen2.5-coder:3b",
+      "task": "summarisation",
+      "accuracy": 1.0,
+      "avg_latency_ms": 6864.666666665774,
+      "consistency": 0.8333333333333334,
+      "correct": 3,
+      "total": 3,
+      "score": 0.831975344870775,
+      "failures": [],
+      "notes": ""
+    },
+    {
+      "model": "qwen2.5-coder:1.5b",
+      "task": "summarisation",
+      "accuracy": 1.0,
+      "avg_latency_ms": 7388.166666666318,
+      "consistency": 0.8333333333333334,
+      "correct": 3,
+      "total": 3,
+      "score": 0.8306293742079083,
+      "failures": [],
+      "notes": ""
+    },
+    {
+      "model": "llama3.2:latest",
+      "task": "summarisation",
+      "accuracy": 1.0,
+      "avg_latency_ms": 5611.999999998564,
+      "consistency": 0.8055555555555555,
+      "correct": 3,
+      "total": 3,
+      "score": 0.830341945260094,
+      "failures": [],
+      "notes": ""
+    },
+    {
+      "model": "cogito:3b",
+      "task": "summarisation",
+      "accuracy": 1.0,
+      "avg_latency_ms": 6229.166666666667,
+      "consistency": 0.8055555555555555,
+      "correct": 3,
+      "total": 3,
+      "score": 0.8282674872426979,
+      "failures": [],
+      "notes": ""
+    },
+    {
+      "model": "qwen2.5-coder:0.5b",
+      "task": "summarisation",
+      "accuracy": 1.0,
+      "avg_latency_ms": 4408.833333329919,
+      "consistency": 0.75,
+      "correct": 3,
+      "total": 3,
+      "score": 0.8244038368510719,
+      "failures": [],
+      "notes": ""
+    },
+    {
+      "model": "qwen2.5:0.5b",
+      "task": "summarisation",
+      "accuracy": 1.0,
+      "avg_latency_ms": 4619.833333335312,
+      "consistency": 0.75,
+      "correct": 3,
+      "total": 3,
+      "score": 0.8233594442037556,
+      "failures": [],
+      "notes": ""
+    },
+    {
+      "model": "llama3.2:3b",
+      "task": "summarisation",
+      "accuracy": 1.0,
+      "avg_latency_ms": 10179.666666668103,
+      "consistency": 0.8055555555555555,
+      "correct": 3,
+      "total": 3,
+      "score": 0.8196917608050329,
+      "failures": [],
+      "notes": ""
+    },
+    {
+      "model": "ministral-3:3b",
+      "task": "summarisation",
+      "accuracy": 1.0,
+      "avg_latency_ms": 10189.999999997477,
+      "consistency": 0.75,
+      "correct": 3,
+      "total": 3,
+      "score": 0.8085648017903911,
+      "failures": [],
+      "notes": ""
+    },
+    {
+      "model": "phi3:3.8b",
+      "task": "summarisation",
+      "accuracy": 1.0,
+      "avg_latency_ms": 9054.666666668103,
+      "consistency": 0.7222222222222222,
+      "correct": 3,
+      "total": 3,
+      "score": 0.8049032626978476,
+      "failures": [],
+      "notes": ""
+    },
+    {
+      "model": "llama3.2:1b",
+      "task": "summarisation",
+      "accuracy": 1.0,
+      "avg_latency_ms": 4205.666666666123,
+      "consistency": 0.6388888888888888,
+      "correct": 3,
+      "total": 3,
+      "score": 0.8032566598901656,
+      "failures": [],
+      "notes": ""
+    },
+    {
+      "model": "granite3.1-moe:1b",
+      "task": "summarisation",
+      "accuracy": 1.0,
+      "avg_latency_ms": 4275.999999998021,
+      "consistency": 0.6388888888888888,
+      "correct": 3,
+      "total": 3,
+      "score": 0.8028763004255264,
+      "failures": [],
+      "notes": ""
+    },
+    {
+      "model": "qwen2.5:1.5b",
+      "task": "summarisation",
+      "accuracy": 1.0,
+      "avg_latency_ms": 10307.333333330462,
+      "consistency": 0.7222222222222222,
+      "correct": 3,
+      "total": 3,
+      "score": 0.8028309085369415,
+      "failures": [],
+      "notes": ""
+    },
+    {
+      "model": "smollm2:135m",
+      "task": "summarisation",
+      "accuracy": 1.0,
+      "avg_latency_ms": 2880.1666666646875,
+      "consistency": 0.47222222222222215,
+      "correct": 3,
+      "total": 3,
+      "score": 0.7793384800558678,
+      "failures": [],
+      "notes": ""
+    },
+    {
+      "model": "deepseek-coder:1.3b",
+      "task": "summarisation",
+      "accuracy": 1.0,
+      "avg_latency_ms": 13114.666666665775,
+      "consistency": 0.3333333333333333,
+      "correct": 3,
+      "total": 3,
+      "score": 0.7215030364407318,
+      "failures": [],
+      "notes": ""
+    },
+    {
+      "model": "qwen3:0.6b",
+      "task": "summarisation",
+      "accuracy": 1.0,
+      "avg_latency_ms": 10755.166666669538,
+      "consistency": 0.08333333333333333,
+      "correct": 3,
+      "total": 3,
+      "score": 0.6743985063429592,
+      "failures": [],
+      "notes": ""
+    },
+    {
+      "model": "qwen3:1.7b",
+      "task": "summarisation",
+      "accuracy": 0.6666666666666666,
+      "avg_latency_ms": 14468.83333333244,
+      "consistency": 0.47222222222222215,
+      "correct": 2,
+      "total": 3,
+      "score": 0.5479371539999954,
+      "failures": [
+        "Z83_Application_Judges_Secretary.pdf: missing keywords ['Z83', 'Judge', 'Secretary', 'application']"
+      ],
+      "notes": ""
+    },
+    {
+      "model": "deepseek-r1:1.5b",
+      "task": "summarisation",
+      "accuracy": 0.6666666666666666,
+      "avg_latency_ms": 12614.666666665775,
+      "consistency": 0.3055555555555555,
+      "correct": 2,
+      "total": 3,
+      "score": 0.5164951662012698,
+      "failures": [
+        "Z83_Application_Judges_Secretary.pdf: missing keywords ['Z83', 'Judge', 'Secretary']"
+      ],
+      "notes": ""
+    },
+    {
+      "model": "deepscaler:latest",
+      "task": "summarisation",
+      "accuracy": 0.6666666666666666,
+      "avg_latency_ms": 29674.500000003416,
+      "consistency": 0.2222222222222222,
+      "correct": 2,
+      "total": 3,
+      "score": 0.4896582092297044,
+      "failures": [
+        "bank_statement_jan2025.pdf: missing keywords ['bank', 'statement', 'FNB', 'balance']"
+      ],
+      "notes": ""
+    },
+    {
+      "model": "phi4-mini-reasoning:latest",
+      "task": "summarisation",
+      "accuracy": 0.6666666666666666,
+      "avg_latency_ms": 30947.99999999911,
+      "consistency": 0.0,
+      "correct": 2,
+      "total": 3,
+      "score": 0.44480176760193435,
+      "failures": [
+        "bank_statement_jan2025.pdf: missing keywords ['bank', 'statement', 'FNB', 'balance']"
+      ],
+      "notes": ""
+    },
+    {
+      "model": "qwen3:4b",
+      "task": "summarisation",
+      "accuracy": 0.0,
+      "avg_latency_ms": 26768.166666666122,
+      "consistency": 0.0,
+      "correct": 0,
+      "total": 3,
+      "score": 0.046254642698690396,
+      "failures": [
+        "Z83_Application_Judges_Secretary.pdf: missing keywords ['Z83', 'Judge', 'Secretary', 'application']",
+        "lease_agreement_2024.pdf: missing keywords ['lease', 'rental', 'agreement']",
+        "bank_statement_jan2025.pdf: missing keywords ['bank', 'statement', 'FNB', 'balance']"
+      ],
+      "notes": ""
+    }
+  ]
+}

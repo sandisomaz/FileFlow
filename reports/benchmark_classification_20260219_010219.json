@@ -1,0 +1,413 @@
+{
+  "timestamp": "2026-02-19T01:02:19",
+  "task": "classification",
+  "winner": "qwen2.5-coder:3b",
+  "recommendation": "Use 'qwen2.5-coder:3b' for classification. Accuracy: 100%, Latency: 8103ms, Consistency: 100%",
+  "results": [
+    {
+      "model": "qwen2.5-coder:3b",
+      "task": "classification",
+      "accuracy": 1.0,
+      "avg_latency_ms": 8102.562499998385,
+      "consistency": 1.0,
+      "correct": 8,
+      "total": 8,
+      "score": 0.8623333368777018,
+      "failures": [],
+      "notes": ""
+    },
+    {
+      "model": "gemma2:2b",
+      "task": "classification",
+      "accuracy": 1.0,
+      "avg_latency_ms": 8223.687499999869,
+      "consistency": 1.0,
+      "correct": 8,
+      "total": 8,
+      "score": 0.8620775833190832,
+      "failures": [],
+      "notes": ""
+    },
+    {
+      "model": "phi3:3.8b",
+      "task": "classification",
+      "accuracy": 1.0,
+      "avg_latency_ms": 9564.437499999258,
+      "consistency": 1.0,
+      "correct": 8,
+      "total": 8,
+      "score": 0.8595682480074319,
+      "failures": [],
+      "notes": ""
+    },
+    {
+      "model": "ministral-3:3b",
+      "task": "classification",
+      "accuracy": 1.0,
+      "avg_latency_ms": 11446.250000000873,
+      "consistency": 1.0,
+      "correct": 8,
+      "total": 8,
+      "score": 0.856795280206999,
+      "failures": [],
+      "notes": ""
+    },
+    {
+      "model": "llama3.2:latest",
+      "task": "classification",
+      "accuracy": 0.875,
+      "avg_latency_ms": 5523.4375,
+      "consistency": 1.0,
+      "correct": 7,
+      "total": 8,
+      "score": 0.7945555047590563,
+      "failures": [
+        "cv_sandiso_mazibuko.docx: expected=Professional, got=Life_Admin"
+      ],
+      "notes": ""
+    },
+    {
+      "model": "llama3.2:3b",
+      "task": "classification",
+      "accuracy": 0.875,
+      "avg_latency_ms": 6486.375000000407,
+      "consistency": 1.0,
+      "correct": 7,
+      "total": 8,
+      "score": 0.7913771582275136,
+      "failures": [
+        "cv_sandiso_mazibuko.docx: expected=Professional, got=Life_Admin"
+      ],
+      "notes": ""
+    },
+    {
+      "model": "cogito:3b",
+      "task": "classification",
+      "accuracy": 0.875,
+      "avg_latency_ms": 7462.875000001077,
+      "consistency": 1.0,
+      "correct": 7,
+      "total": 8,
+      "score": 0.7887818365161184,
+      "failures": [
+        "cv_sandiso_mazibuko.docx: expected=Professional, got=Life_Admin"
+      ],
+      "notes": ""
+    },
+    {
+      "model": "qwen2.5:3b",
+      "task": "classification",
+      "accuracy": 0.875,
+      "avg_latency_ms": 7598.625000000538,
+      "consistency": 1.0,
+      "correct": 7,
+      "total": 8,
+      "score": 0.788459783479431,
+      "failures": [
+        "main.py: expected=Development, got=Unknown"
+      ],
+      "notes": ""
+    },
+    {
+      "model": "qwen2.5-coder:1.5b",
+      "task": "classification",
+      "accuracy": 0.875,
+      "avg_latency_ms": 4710.000000000946,
+      "consistency": 0.9375,
+      "correct": 7,
+      "total": 8,
+      "score": 0.7854336345032256,
+      "failures": [
+        "main.py: expected=Development, got=Unknown"
+      ],
+      "notes": ""
+    },
+    {
+      "model": "qwen2.5:1.5b",
+      "task": "classification",
+      "accuracy": 0.75,
+      "avg_latency_ms": 5265.625,
+      "consistency": 1.0,
+      "correct": 6,
+      "total": 8,
+      "score": 0.7205447877399983,
+      "failures": [
+        "main.py: expected=Development, got=Professional",
+        "bank_statement_jan2025.pdf: expected=Life_Admin, got=Waste"
+      ],
+      "notes": ""
+    },
+    {
+      "model": "smollm2:1.7b",
+      "task": "classification",
+      "accuracy": 0.75,
+      "avg_latency_ms": 6596.687499999462,
+      "consistency": 1.0,
+      "correct": 6,
+      "total": 8,
+      "score": 0.7160564744533608,
+      "failures": [
+        "study_guide_administrative_law.pdf: expected=Education, got=Professional",
+        "empty_scan.pdf: expected=Waste, got=Development"
+      ],
+      "notes": ""
+    },
+    {
+      "model": "granite3.1-moe:latest",
+      "task": "classification",
+      "accuracy": 0.625,
+      "avg_latency_ms": 4900.374999999258,
+      "consistency": 1.0,
+      "correct": 5,
+      "total": 8,
+      "score": 0.6470716589076191,
+      "failures": [
+        "main.py: expected=Development, got=Professional",
+        "bank_statement_jan2025.pdf: expected=Life_Admin, got=Unknown",
+        "empty_scan.pdf: expected=Waste, got=Life_Admin"
+      ],
+      "notes": ""
+    },
+    {
+      "model": "qwen2.5:0.5b",
+      "task": "classification",
+      "accuracy": 0.5,
+      "avg_latency_ms": 3419.8749999995925,
+      "consistency": 1.0,
+      "correct": 4,
+      "total": 8,
+      "score": 0.5804469175361573,
+      "failures": [
+        "study_guide_administrative_law.pdf: expected=Education, got=Professional",
+        "main.py: expected=Development, got=Professional",
+        "bank_statement_jan2025.pdf: expected=Life_Admin, got=Professional",
+        "empty_scan.pdf: expected=Waste, got=Professional"
+      ],
+      "notes": ""
+    },
+    {
+      "model": "qwen3:0.6b",
+      "task": "classification",
+      "accuracy": 0.625,
+      "avg_latency_ms": 8993.125000000873,
+      "consistency": 0.6875,
+      "correct": 5,
+      "total": 8,
+      "score": 0.5730712347789357,
+      "failures": [
+        "main.py: expected=Development, got=Unknown",
+        "cv_sandiso_mazibuko.docx: expected=Professional, got=Life_Admin",
+        "empty_scan.pdf: expected=Waste, got=Life_Admin"
+      ],
+      "notes": ""
+    },
+    {
+      "model": "granite3.1-moe:1b",
+      "task": "classification",
+      "accuracy": 0.5,
+      "avg_latency_ms": 4351.5625,
+      "consistency": 0.9375,
+      "correct": 4,
+      "total": 8,
+      "score": 0.5621996539525859,
+      "failures": [
+        "Z83_Application_Judges_Secretary.pdf: expected=Professional, got=Education",
+        "cv_sandiso_mazibuko.docx: expected=Professional, got=Life_Admin",
+        "cover_letter_werksmans.pdf: expected=Professional, got=Life_Admin",
+        "empty_scan.pdf: expected=Waste, got=Life_Admin"
+      ],
+      "notes": ""
+    },
+    {
+      "model": "deepscaler:latest",
+      "task": "classification",
+      "accuracy": 0.5,
+      "avg_latency_ms": 28270.50000000054,
+      "consistency": 0.9375,
+      "correct": 4,
+      "total": 8,
+      "score": 0.5331977803769415,
+      "failures": [
+        "lease_agreement_2024.pdf: expected=Life_Admin, got=Professional",
+        "study_guide_administrative_law.pdf: expected=Education, got=Professional",
+        "main.py: expected=Development, got=Professional",
+        "empty_scan.pdf: expected=Waste, got=Professional"
+      ],
+      "notes": ""
+    },
+    {
+      "model": "deepseek-r1:1.5b",
+      "task": "classification",
+      "accuracy": 0.5,
+      "avg_latency_ms": 13262.749999999869,
+      "consistency": 0.875,
+      "correct": 4,
+      "total": 8,
+      "score": 0.5296798988433946,
+      "failures": [
+        "study_guide_administrative_law.pdf: expected=Education, got=Professional",
+        "main.py: expected=Development, got=Professional",
+        "bank_statement_jan2025.pdf: expected=Life_Admin, got=Professional",
+        "empty_scan.pdf: expected=Waste, got=Professional"
+      ],
+      "notes": ""
+    },
+    {
+      "model": "qwen2.5-coder:0.5b",
+      "task": "classification",
+      "accuracy": 0.375,
+      "avg_latency_ms": 3347.6874999996653,
+      "consistency": 0.9375,
+      "correct": 3,
+      "total": 8,
+      "score": 0.49348332891014157,
+      "failures": [
+        "Z83_Application_Judges_Secretary.pdf: expected=Professional, got=Unknown",
+        "main.py: expected=Development, got=Education",
+        "cv_sandiso_mazibuko.docx: expected=Professional, got=Education",
+        "cover_letter_werksmans.pdf: expected=Professional, got=Unknown",
+        "empty_scan.pdf: expected=Waste, got=Unknown"
+      ],
+      "notes": ""
+    },
+    {
+      "model": "llama3.2:1b",
+      "task": "classification",
+      "accuracy": 0.375,
+      "avg_latency_ms": 4780.249999999796,
+      "consistency": 0.9375,
+      "correct": 3,
+      "total": 8,
+      "score": 0.48510985771999604,
+      "failures": [
+        "Z83_Application_Judges_Secretary.pdf: expected=Professional, got=Life_Admin",
+        "lease_agreement_2024.pdf: expected=Life_Admin, got=Unknown",
+        "study_guide_administrative_law.pdf: expected=Education, got=Unknown",
+        "cover_letter_werksmans.pdf: expected=Professional, got=Unknown",
+        "empty_scan.pdf: expected=Waste, got=Unknown"
+      ],
+      "notes": ""
+    },
+    {
+      "model": "phi4-mini-reasoning:latest",
+      "task": "classification",
+      "accuracy": 0.375,
+      "avg_latency_ms": 31152.374999999665,
+      "consistency": 1.0,
+      "correct": 3,
+      "total": 8,
+      "score": 0.4697378619829562,
+      "failures": [
+        "lease_agreement_2024.pdf: expected=Life_Admin, got=Professional",
+        "study_guide_administrative_law.pdf: expected=Education, got=Professional",
+        "main.py: expected=Development, got=Professional",
+        "bank_statement_jan2025.pdf: expected=Life_Admin, got=Professional",
+        "empty_scan.pdf: expected=Waste, got=Professional"
+      ],
+      "notes": ""
+    },
+    {
+      "model": "deepseek-coder:1.3b",
+      "task": "classification",
+      "accuracy": 0.125,
+      "avg_latency_ms": 4741.250000000946,
+      "consistency": 1.0,
+      "correct": 1,
+      "total": 8,
+      "score": 0.3477887605256398,
+      "failures": [
+        "Z83_Application_Judges_Secretary.pdf: expected=Professional, got=Unknown",
+        "study_guide_administrative_law.pdf: expected=Education, got=Unknown",
+        "main.py: expected=Development, got=Unknown",
+        "bank_statement_jan2025.pdf: expected=Life_Admin, got=Professional",
+        "cv_sandiso_mazibuko.docx: expected=Professional, got=Unknown",
+        "cover_letter_werksmans.pdf: expected=Professional, got=Unknown",
+        "empty_scan.pdf: expected=Waste, got=Unknown"
+      ],
+      "notes": ""
+    },
+    {
+      "model": "smollm2:360m",
+      "task": "classification",
+      "accuracy": 0.125,
+      "avg_latency_ms": 3354.4999999994616,
+      "consistency": 0.9375,
+      "correct": 1,
+      "total": 8,
+      "score": 0.34343201983673793,
+      "failures": [
+        "Z83_Application_Judges_Secretary.pdf: expected=Professional, got=Unknown",
+        "study_guide_administrative_law.pdf: expected=Education, got=Unknown",
+        "main.py: expected=Development, got=Unknown",
+        "bank_statement_jan2025.pdf: expected=Life_Admin, got=Unknown",
+        "cv_sandiso_mazibuko.docx: expected=Professional, got=Unknown",
+        "cover_letter_werksmans.pdf: expected=Professional, got=Unknown",
+        "empty_scan.pdf: expected=Waste, got=Unknown"
+      ],
+      "notes": ""
+    },
+    {
+      "model": "smollm2:135m",
+      "task": "classification",
+      "accuracy": 0.0,
+      "avg_latency_ms": 3344.7500000002037,
+      "consistency": 0.9375,
+      "correct": 0,
+      "total": 8,
+      "score": 0.2685054979271134,
+      "failures": [
+        "Z83_Application_Judges_Secretary.pdf: expected=Professional, got=Unknown",
+        "lease_agreement_2024.pdf: expected=Life_Admin, got=Unknown",
+        "study_guide_administrative_law.pdf: expected=Education, got=Professional",
+        "main.py: expected=Development, got=Professional",
+        "bank_statement_jan2025.pdf: expected=Life_Admin, got=Unknown",
+        "cv_sandiso_mazibuko.docx: expected=Professional, got=Unknown",
+        "cover_letter_werksmans.pdf: expected=Professional, got=Unknown",
+        "empty_scan.pdf: expected=Waste, got=Professional"
+      ],
+      "notes": ""
+    },
+    {
+      "model": "qwen3:1.7b",
+      "task": "classification",
+      "accuracy": 0.0,
+      "avg_latency_ms": 16389.687499999127,
+      "consistency": 1.0,
+      "correct": 0,
+      "total": 8,
+      "score": 0.2518688696307997,
+      "failures": [
+        "Z83_Application_Judges_Secretary.pdf: expected=Professional, got=Unknown",
+        "lease_agreement_2024.pdf: expected=Life_Admin, got=Unknown",
+        "study_guide_administrative_law.pdf: expected=Education, got=Unknown",
+        "main.py: expected=Development, got=Unknown",
+        "bank_statement_jan2025.pdf: expected=Life_Admin, got=Unknown",
+        "cv_sandiso_mazibuko.docx: expected=Professional, got=Unknown",
+        "cover_letter_werksmans.pdf: expected=Professional, got=Unknown",
+        "empty_scan.pdf: expected=Waste, got=Unknown"
+      ],
+      "notes": ""
+    },
+    {
+      "model": "qwen3:4b",
+      "task": "classification",
+      "accuracy": 0.0,
+      "avg_latency_ms": 26387.68750000054,
+      "consistency": 1.0,
+      "correct": 0,
+      "total": 8,
+      "score": 0.24640270509895418,
+      "failures": [
+        "Z83_Application_Judges_Secretary.pdf: expected=Professional, got=Unknown",
+        "lease_agreement_2024.pdf: expected=Life_Admin, got=Unknown",
+        "study_guide_administrative_law.pdf: expected=Education, got=Unknown",
+        "main.py: expected=Development, got=Unknown",
+        "bank_statement_jan2025.pdf: expected=Life_Admin, got=Unknown",
+        "cv_sandiso_mazibuko.docx: expected=Professional, got=Unknown",
+        "cover_letter_werksmans.pdf: expected=Professional, got=Unknown",
+        "empty_scan.pdf: expected=Waste, got=Unknown"
+      ],
+      "notes": ""
+    }
+  ]
+}

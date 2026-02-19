@@ -1,0 +1,140 @@
+{
+  "timestamp": "2026-02-19T08:15:17",
+  "task": "vision",
+  "winner": "gemma3:270m",
+  "recommendation": "Use 'gemma3:270m' for image understanding. Quality: 57%, Latency: 3531ms",
+  "results": [
+    {
+      "model": "gemma3:270m",
+      "task": "vision",
+      "accuracy": 0.5714285714285714,
+      "avg_latency_ms": 3530.9999999881256,
+      "consistency": 1.0,
+      "correct": 1,
+      "total": 1,
+      "score": 0.6225085035725606,
+      "failures": [],
+      "notes": "response: The document type is a scanned South African government employment application f..."
+    },
+    {
+      "model": "gemma3:4b",
+      "task": "vision",
+      "accuracy": 0.5714285714285714,
+      "avg_latency_ms": 19360.000000015134,
+      "consistency": 1.0,
+      "correct": 1,
+      "total": 1,
+      "score": 0.5926880641532492,
+      "failures": [],
+      "notes": "response: The scanned document is a South African Government Z83 employment application fo..."
+    },
+    {
+      "model": "gemma3:4b-it-qat",
+      "task": "vision",
+      "accuracy": 0.5714285714285714,
+      "avg_latency_ms": 28967.99999999348,
+      "consistency": 1.0,
+      "correct": 1,
+      "total": 1,
+      "score": 0.5883103438710673,
+      "failures": [],
+      "notes": "response: The scanned document is a South African government Z83 employment application fo..."
+    },
+    {
+      "model": "qwen2.5vl:3b",
+      "task": "vision",
+      "accuracy": 0.42857142857142855,
+      "avg_latency_ms": 12891.00000000326,
+      "consistency": 1.0,
+      "correct": 1,
+      "total": 1,
+      "score": 0.5122204440685482,
+      "failures": [],
+      "notes": "response: The scanned South African government employment application form (Z83) includes ..."
+    },
+    {
+      "model": "granite3.2-vision:latest",
+      "task": "vision",
+      "accuracy": 0.42857142857142855,
+      "avg_latency_ms": 13766.00000000326,
+      "consistency": 1.0,
+      "correct": 1,
+      "total": 1,
+      "score": 0.5113092370343333,
+      "failures": [],
+      "notes": "response: The Z83 is a scanned South African government employment application form, and i..."
+    },
+    {
+      "model": "gemma3:1b",
+      "task": "vision",
+      "accuracy": 0.2857142857142857,
+      "avg_latency_ms": 5891.00000000326,
+      "consistency": 1.0,
+      "correct": 0,
+      "total": 1,
+      "score": 0.43968292042688606,
+      "failures": [],
+      "notes": "response: This image shows a South African government employment application form, specifi..."
+    },
+    {
+      "model": "gemma3:1b-it-qat",
+      "task": "vision",
+      "accuracy": 0.2857142857142857,
+      "avg_latency_ms": 6328.000000008615,
+      "consistency": 1.0,
+      "correct": 0,
+      "total": 1,
+      "score": 0.438280135541285,
+      "failures": [],
+      "notes": "response: This image shows a South African government employment application form, specifi..."
+    },
+    {
+      "model": "llava-phi3:3.8b",
+      "task": "vision",
+      "accuracy": 0.2857142857142857,
+      "avg_latency_ms": 14342.99999999348,
+      "consistency": 1.0,
+      "correct": 0,
+      "total": 1,
+      "score": 0.4250383978855653,
+      "failures": [],
+      "notes": "response: The Z83 is a South African government employment application form that includes ..."
+    },
+    {
+      "model": "moondream:latest",
+      "task": "vision",
+      "accuracy": 0.0,
+      "avg_latency_ms": 7280.999999988126,
+      "consistency": 1.0,
+      "correct": 0,
+      "total": 1,
+      "score": 0.2642268237786678,
+      "failures": [],
+      "notes": "response: ids [0.8, 0.63, 0.86, 0.69]..."
+    },
+    {
+      "model": "qwen3-vl:2b",
+      "task": "vision",
+      "accuracy": 0.0,
+      "avg_latency_ms": 17344.000000011874,
+      "consistency": 1.0,
+      "correct": 0,
+      "total": 1,
+      "score": 0.2511600209166063,
+      "failures": [],
+      "notes": "response: ..."
+    },
+    {
+      "model": "qwen3-vl:4b",
+      "task": "vision",
+      "accuracy": 0.0,
+      "avg_latency_ms": 38655.999999988126,
+      "consistency": 1.0,
+      "correct": 0,
+      "total": 1,
+      "score": 0.24273283066533377,
+      "failures": [],
+      "notes": "response: ..."
+    }
+  ]
+}

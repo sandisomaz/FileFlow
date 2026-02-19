@@ -1,0 +1,140 @@
+{
+  "timestamp": "2026-02-19T07:36:43",
+  "task": "vision",
+  "winner": "gemma3:270m",
+  "recommendation": "Use 'gemma3:270m' for image understanding. Quality: 57%, Latency: 3750ms",
+  "results": [
+    {
+      "model": "gemma3:270m",
+      "task": "vision",
+      "accuracy": 0.5714285714285714,
+      "avg_latency_ms": 3750.0,
+      "consistency": 1.0,
+      "correct": 1,
+      "total": 1,
+      "score": 0.6210388056877314,
+      "failures": [],
+      "notes": "response: The document type is a scanned South African government employment application f..."
+    },
+    {
+      "model": "gemma3:4b",
+      "task": "vision",
+      "accuracy": 0.5714285714285714,
+      "avg_latency_ms": 16578.000000008615,
+      "consistency": 1.0,
+      "correct": 1,
+      "total": 1,
+      "score": 0.5945815288849581,
+      "failures": [],
+      "notes": "response: The scanned document is a South African Government Z83 employment application fo..."
+    },
+    {
+      "model": "granite3.2-vision:latest",
+      "task": "vision",
+      "accuracy": 0.5714285714285714,
+      "avg_latency_ms": 17405.999999988126,
+      "consistency": 1.0,
+      "correct": 1,
+      "total": 1,
+      "score": 0.5939730451960625,
+      "failures": [],
+      "notes": "response: The scanned South African government employment application form is a Z83, which..."
+    },
+    {
+      "model": "qwen2.5vl:3b",
+      "task": "vision",
+      "accuracy": 0.42857142857142855,
+      "avg_latency_ms": 15532.00000000652,
+      "consistency": 1.0,
+      "correct": 1,
+      "total": 1,
+      "score": 0.5097011601803346,
+      "failures": [],
+      "notes": "response: The scanned South African government employment application form (Z83) includes ..."
+    },
+    {
+      "model": "gemma3:1b",
+      "task": "vision",
+      "accuracy": 0.2857142857142857,
+      "avg_latency_ms": 6641.00000000326,
+      "consistency": 1.0,
+      "correct": 0,
+      "total": 1,
+      "score": 0.437358395727561,
+      "failures": [],
+      "notes": "response: This image shows a South African government employment application form, specifi..."
+    },
+    {
+      "model": "gemma3:1b-it-qat",
+      "task": "vision",
+      "accuracy": 0.2857142857142857,
+      "avg_latency_ms": 7296.999999991385,
+      "consistency": 1.0,
+      "correct": 0,
+      "total": 1,
+      "score": 0.43561560724035464,
+      "failures": [],
+      "notes": "response: This image shows a South African government employment application form, specifi..."
+    },
+    {
+      "model": "llava-phi3:3.8b",
+      "task": "vision",
+      "accuracy": 0.2857142857142857,
+      "avg_latency_ms": 14844.000000011874,
+      "consistency": 1.0,
+      "correct": 0,
+      "total": 1,
+      "score": 0.42458060841148615,
+      "failures": [],
+      "notes": "response: The Z83 is a South African government employment application form that includes ..."
+    },
+    {
+      "model": "moondream:latest",
+      "task": "vision",
+      "accuracy": 0.0,
+      "avg_latency_ms": 9062.000000005355,
+      "consistency": 1.0,
+      "correct": 0,
+      "total": 1,
+      "score": 0.26044549626572966,
+      "failures": [],
+      "notes": "response: ids [0.44, 0.46, 0.51, 0.5]..."
+    },
+    {
+      "model": "qwen3-vl:2b",
+      "task": "vision",
+      "accuracy": 0.0,
+      "avg_latency_ms": 23983.99999999674,
+      "consistency": 1.0,
+      "correct": 0,
+      "total": 1,
+      "score": 0.24741318836071033,
+      "failures": [],
+      "notes": "response: ..."
+    },
+    {
+      "model": "qwen3-vl:4b",
+      "task": "vision",
+      "accuracy": 0.0,
+      "avg_latency_ms": 46530.999999988126,
+      "consistency": 1.0,
+      "correct": 0,
+      "total": 1,
+      "score": 0.2411405634574896,
+      "failures": [],
+      "notes": "response: ..."
+    },
+    {
+      "model": "gemma3:4b-it-qat",
+      "task": "vision",
+      "accuracy": 0.0,
+      "avg_latency_ms": 62171.999999991385,
+      "consistency": 1.0,
+      "correct": 0,
+      "total": 1,
+      "score": 0.23886618655008,
+      "failures": [],
+      "notes": "response: ..."
+    }
+  ]
+}
