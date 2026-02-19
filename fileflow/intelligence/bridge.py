@@ -100,24 +100,32 @@ class Bridge:
     # Generation (The Judge's voice)
     # ------------------------------------------------------------------
 
-    def generate(self, prompt: str, model: Optional[str] = None) -> Optional[str]:
+    def generate(self, prompt: str, model: Optional[str] = None,
+                 images: Optional[list] = None) -> Optional[str]:
         """
         Sends a prompt to the SLM and returns the response text.
         Returns None if Ollama is unavailable or the call fails.
+
+        Args:
+            images: Optional list of base64-encoded image strings for
+                    vision models (e.g. gemma3:4b, llava, qwen2.5vl).
         """
         if not self.is_healthy():
             return None
 
         target_model = model or self.slm_model
+        num_predict = 512 if images else 256
         payload = {
             "model": target_model,
             "prompt": prompt,
             "stream": False,
             "options": {
                 "temperature": 0.1,   # Low temp = consistent, deterministic rulings
-                "num_predict": 256,   # Short responses — we only need a category + reason
+                "num_predict": num_predict,
             },
         }
+        if images:
+            payload["images"] = images
 
         try:
             start = time.monotonic()

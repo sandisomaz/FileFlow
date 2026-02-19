@@ -1,0 +1,140 @@
+{
+  "timestamp": "2026-02-19T08:59:43",
+  "task": "vision",
+  "winner": "llava-phi3:3.8b",
+  "recommendation": "Use 'llava-phi3:3.8b' for image understanding. Quality: 39%, Latency: 37828ms",
+  "results": [
+    {
+      "model": "llava-phi3:3.8b",
+      "task": "vision",
+      "accuracy": 0.3888888888888889,
+      "avg_latency_ms": 37827.99999997951,
+      "consistency": 1.0,
+      "correct": 1,
+      "total": 1,
+      "score": 0.476259695232511,
+      "failures": [],
+      "notes": "response: The image is a screenshot of an email sent by De Villiers Du Plesis Attorneys. The email is addressed to potential candidates for a job opening at their law firm in Johannesburg. It provides informati..."
+    },
+    {
+      "model": "moondream:latest",
+      "task": "vision",
+      "accuracy": 0.3333333333333333,
+      "avg_latency_ms": 30516.00000000326,
+      "consistency": 1.0,
+      "correct": 1,
+      "total": 1,
+      "score": 0.4449388178437143,
+      "failures": [],
+      "notes": "response: The document is a white flyer with blue text that reads \"De Villiers du Plessis Lawyers\" and \"Law firm established in Meyerspark, Pretoria, registered in January 2015\"...."
+    },
+    {
+      "model": "gemma3:270m",
+      "task": "vision",
+      "accuracy": 0.0,
+      "avg_latency_ms": 3405.9999999881256,
+      "consistency": 1.0,
+      "correct": 0,
+      "total": 1,
+      "score": 0.28054878699293917,
+      "failures": [],
+      "notes": "response: ..."
+    },
+    {
+      "model": "gemma3:1b",
+      "task": "vision",
+      "accuracy": 0.0,
+      "avg_latency_ms": 4093.9999999827705,
+      "consistency": 1.0,
+      "correct": 0,
+      "total": 1,
+      "score": 0.27610166550178683,
+      "failures": [],
+      "notes": "response: ..."
+    },
+    {
+      "model": "gemma3:1b-it-qat",
+      "task": "vision",
+      "accuracy": 0.0,
+      "avg_latency_ms": 4296.999999991385,
+      "consistency": 1.0,
+      "correct": 0,
+      "total": 1,
+      "score": 0.27498667235924623,
+      "failures": [],
+      "notes": "response: ..."
+    },
+    {
+      "model": "granite3.2-vision:latest",
+      "task": "vision",
+      "accuracy": 0.0,
+      "avg_latency_ms": 122062.00000000536,
+      "consistency": 1.0,
+      "correct": 0,
+      "total": 1,
+      "score": 0.23440748753491103,
+      "failures": [],
+      "notes": "response: ..."
+    },
+    {
+      "model": "qwen3-vl:2b",
+      "task": "vision",
+      "accuracy": 0.0,
+      "avg_latency_ms": 122078.00000000861,
+      "consistency": 1.0,
+      "correct": 0,
+      "total": 1,
+      "score": 0.23440671798995466,
+      "failures": [],
+      "notes": "response: ..."
+    },
+    {
+      "model": "qwen3-vl:4b",
+      "task": "vision",
+      "accuracy": 0.0,
+      "avg_latency_ms": 122078.9999999979,
+      "consistency": 1.0,
+      "correct": 0,
+      "total": 1,
+      "score": 0.23440666989785996,
+      "failures": [],
+      "notes": "response: ..."
+    },
+    {
+      "model": "gemma3:4b",
+      "task": "vision",
+      "accuracy": 0.0,
+      "avg_latency_ms": 122078.9999999979,
+      "consistency": 1.0,
+      "correct": 0,
+      "total": 1,
+      "score": 0.23440666989785996,
+      "failures": [],
+      "notes": "response: ..."
+    },
+    {
+      "model": "gemma3:4b-it-qat",
+      "task": "vision",
+      "accuracy": 0.0,
+      "avg_latency_ms": 122078.9999999979,
+      "consistency": 1.0,
+      "correct": 0,
+      "total": 1,
+      "score": 0.23440666989785996,
+      "failures": [],
+      "notes": "response: ..."
+    },
+    {
+      "model": "qwen2.5vl:3b",
+      "task": "vision",
+      "accuracy": 0.0,
+      "avg_latency_ms": 122108.99999999674,
+      "consistency": 1.0,
+      "correct": 0,
+      "total": 1,
+      "score": 0.23440522737916653,
+      "failures": [],
+      "notes": "response: ..."
+    }
+  ]
+}
