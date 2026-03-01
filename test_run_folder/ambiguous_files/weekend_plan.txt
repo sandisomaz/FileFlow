@@ -1,7 +1,0 @@
-MY TO-DO LIST
-- Buy groceries (bread, milk, eggs)
-- Call the insurance company about the car claim
-- Finish the 'fileflow' documentation update
-- Prepare for the board exam interview
-- Reset the router
-- Email Mr. Peterson regarding the job application status
