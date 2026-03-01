@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FileFlow</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@300;400;500;600&family=Instrument+Serif:ital@0;1&display=swap"
+        rel="stylesheet">
+
+    <!-- CSS Modules -->
+    <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" href="/css/components.css">
+</head>
+
+<body>
+    <div id="app" :class="{ 'has-started': hasStarted }">
+
+        <!-- SIDEBAR -->
+        <aside class="sidebar">
+            <div class="logo-area">
+                <div class="ff-logo-mark">
+                    <span class="letter">F</span>
+                    <span class="dot"></span>
+                </div>
+                <span class="logo-text">FileFlow</span>
+            </div>
+
+            <button class="new-btn" @click="newSession">
+                <span class="icon">＋</span> New Session
+            </button>
+
+            <div class="session-label">Recent Matters</div>
+            <div class="session-list">
+                <div v-for="s in sessions" :key="s.id" class="session-item" :class="{active: s.id === currentSessionId}"
+                    @click="loadSession(s)">
+                    {{ s.name || "Untitled Matter" }}
+                </div>
+            </div>
+        </aside>
+
+        <div class="workspace">
+            <!-- CHAT COLUMN -->
+            <div class="chat-column">
+
+                <!-- Zero State Hero (Fades out when started) -->
+                <div class="hero-section" v-if="!hasStarted">
+                    <h1>Good afternoon, Sandiso.</h1>
+                    <p>I am ready to organise your documents.</p>
+                </div>
+
+                <!-- Chat History (Fades in) -->
+                <div class="chat-scroll" ref="chatEl" v-show="hasStarted">
+                    <div v-for="msg in messages" :key="msg.id" class="msg-row" :class="msg.role">
+                        <div class="avatar" :class="msg.role">
+                            <span v-if="msg.role === 'ff'">F</span>
+                            <span v-else>S</span>
+                        </div>
+                        <div class="msg-content">
+                            <div class="bubble" :class="msg.role" v-if="msg.thinking">
+                                <div class="dot-flashing"></div>
+                            </div>
+                            <div class="bubble" :class="msg.role" v-else>{{ msg.text }}</div>
+
+                            <!-- Artifact Preview Card -->
+                            <div v-if="msg.artifact" class="card-preview" @click="openArtifact(msg.artifact)">
+                                <div class="card-icon">
+                                    <span v-if="msg.artifact.type === 'scout'">📊</span>
+                                    <span v-if="msg.artifact.type === 'plan'">📋</span>
+                                    <span v-if="msg.artifact.type === 'running'">⟳</span>
+                                    <span v-if="msg.artifact.type === 'done'">✓</span>
+                                </div>
+                                <div class="card-details">
+                                    <h4>{{ msg.artifact.title }}</h4>
+                                    <p>Click to view details</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Input Area (Centers initially, then slides down) -->
+                <div class="input-area">
+                    <div class="input-wrapper">
+                        <button class="attach-btn" @click="pickFolder" title="Select Folder to Audit">📂</button>
+                        <textarea v-model="userInput" @keydown.enter.prevent="sendMessage"
+                            placeholder="Tell FileFlow what to organise..."></textarea>
+                        <button class="send-btn" @click="sendMessage">↑</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ARTIFACT COLUMN (Right Panel) -->
+            <div class="artifact-column" :class="{ open: artifactVisible }">
+                <div class="artifact-header">
+                    <div>
+                        <div class="artifact-subtitle">{{ currentArtifact?.subtitle || 'System' }}</div>
+                        <div class="artifact-title">{{ currentArtifact?.title || 'Details' }}</div>
+                    </div>
+                    <button class="close-artifact" @click="artifactVisible = false">✕</button>
+                </div>
+
+                <div class="artifact-content" v-if="currentArtifact">
+                    <!-- Dynamic content rendered by Vue in app.js -->
+                    <div v-html="renderArtifactContent(currentArtifact)"></div>
+
+                    <!-- Action Buttons -->
+                    <div class="action-row">
+                        <button v-if="currentArtifact.type === 'scout'" class="btn primary"
+                            @click="requestPlan(currentArtifact.taskId)">Generate Plan</button>
+                        <button v-if="currentArtifact.type === 'plan'" class="btn primary"
+                            @click="executePlan(currentArtifact.taskId)">Approve & Execute</button>
+                        <button v-if="currentArtifact.type === 'running'" class="btn danger"
+                            @click="stopTask(currentArtifact.taskId)">Stop</button>
+                        <button v-if="currentArtifact.type === 'done'" class="btn"
+                            @click="rollbackTask(currentArtifact.taskId)">Undo Changes</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <script src="/js/app.js"></script>
+</body>
+
+</html>

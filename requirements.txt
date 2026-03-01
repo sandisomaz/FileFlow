@@ -21,3 +21,10 @@ watchdog>=3.0.0        # listener.py: cross-platform filesystem event watcher
 Pillow>=10.0.0         # eye.py: image reading and preprocessing
 imagehash>=4.3.0       # eye.py: perceptual hashing for visual dedup
 pytesseract>=0.3.10    # eye.py: OCR for scanned documents (requires Tesseract binary)
+
+# V10 Colleague Mode — The UI
+fastapi>=0.100.0
+uvicorn>=0.22.0
+pywebview>=4.2.0
+jinja2>=3.1.0          # HTML templating
+python-multipart>=0.0.6 # File uploads for UI

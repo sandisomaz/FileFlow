@@ -1,0 +1,1186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FileFlow — Product Blueprint</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Geist+Mono:wght@300;400;500;600&family=Instrument+Serif:ital@0;1&display=swap');
+
+:root {
+  --bg: #ffffff;
+  --surface: #f7f7f7;
+  --border: #e5e5e5;
+  --border-dark: #d0d0d0;
+  --text: #111111;
+  --muted: #888888;
+  --muted-light: #bbbbbb;
+  --green: #16a34a;
+  --green-bg: #f0fdf4;
+  --green-border: #bbf7d0;
+  --amber: #d97706;
+  --amber-bg: #fffbeb;
+  --red: #dc2626;
+  --red-bg: #fef2f2;
+  --blue: #2563eb;
+  --blue-bg: #eff6ff;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Geist Mono', monospace;
+  font-size: 13px;
+  line-height: 1.7;
+  padding: 0;
+}
+
+/* ---- COVER ---- */
+.cover {
+  border-bottom: 2px solid var(--text);
+  padding: 60px 64px 48px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: end;
+  gap: 32px;
+}
+
+.cover-badge {
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 16px;
+}
+
+.cover-title {
+  font-family: 'Instrument Serif', serif;
+  font-size: 52px;
+  line-height: 1.0;
+  letter-spacing: -1px;
+}
+
+.cover-subtitle {
+  margin-top: 12px;
+  color: var(--muted);
+  font-size: 12px;
+  max-width: 480px;
+}
+
+.cover-meta {
+  text-align: right;
+  font-size: 10px;
+  color: var(--muted);
+  line-height: 2;
+}
+
+.cover-meta strong { color: var(--text); display: block; font-size: 12px; }
+
+/* ---- TOC ---- */
+.toc {
+  padding: 40px 64px;
+  border-bottom: 1px solid var(--border);
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 32px;
+}
+
+.toc-group-title {
+  font-size: 9px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--muted-light);
+  margin-bottom: 12px;
+}
+
+.toc-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 0;
+  font-size: 11px;
+  color: var(--muted);
+  border-bottom: 1px solid var(--border);
+}
+
+.toc-num {
+  font-size: 9px;
+  color: var(--muted-light);
+  min-width: 24px;
+}
+
+/* ---- CONTENT ---- */
+.content {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 64px 80px;
+}
+
+/* ---- SECTION ---- */
+.section {
+  padding: 56px 0 0;
+  border-top: 2px solid var(--text);
+  margin-top: 56px;
+}
+
+.section:first-child { margin-top: 56px; border-top: none; }
+
+.section-num {
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+.section-title {
+  font-family: 'Instrument Serif', serif;
+  font-size: 32px;
+  line-height: 1.1;
+  margin-bottom: 24px;
+  letter-spacing: -0.5px;
+}
+
+.subsection {
+  margin-top: 36px;
+}
+
+.subsection-title {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+  color: var(--muted);
+}
+
+p { margin-bottom: 14px; color: var(--text); }
+p:last-child { margin-bottom: 0; }
+
+/* ---- SCREENS GRID ---- */
+.screens-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.screen-card {
+  border: 1px solid var(--border-dark);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.screen-card.full { grid-column: 1 / -1; }
+
+.screen-header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.screen-num {
+  width: 22px;
+  height: 22px;
+  background: var(--text);
+  color: #fff;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.screen-name {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.screen-tag {
+  margin-left: auto;
+  font-size: 9px;
+  padding: 2px 8px;
+  border-radius: 3px;
+  border: 1px solid;
+}
+
+.tag-screen  { color: var(--blue);  border-color: #bfdbfe; background: var(--blue-bg); }
+.tag-state   { color: var(--amber); border-color: #fde68a; background: var(--amber-bg); }
+.tag-edge    { color: var(--red);   border-color: #fecaca; background: var(--red-bg); }
+.tag-done    { color: var(--green); border-color: var(--green-border); background: var(--green-bg); }
+
+.screen-body {
+  padding: 16px;
+}
+
+.screen-body p { font-size: 12px; color: var(--muted); margin-bottom: 10px; }
+
+/* ---- FLOW STEPS ---- */
+.flow {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin-top: 16px;
+  border: 1px solid var(--border-dark);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.flow-step {
+  display: grid;
+  grid-template-columns: 36px 1fr auto;
+  align-items: start;
+  gap: 14px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.1s;
+}
+
+.flow-step:last-child { border-bottom: none; }
+.flow-step:hover { background: var(--surface); }
+
+.flow-step-num {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 600;
+  flex-shrink: 0;
+  color: var(--muted);
+}
+
+.flow-step-num.done { background: var(--text); color: #fff; border-color: var(--text); }
+.flow-step-num.current { background: var(--green-bg); color: var(--green); border-color: var(--green-border); }
+.flow-step-num.warn { background: var(--amber-bg); color: var(--amber); border-color: #fde68a; }
+
+.flow-step-body { padding-top: 4px; }
+.flow-step-title { font-size: 12px; font-weight: 600; margin-bottom: 3px; }
+.flow-step-desc { font-size: 11px; color: var(--muted); line-height: 1.6; }
+
+.flow-step-tag {
+  font-size: 9px;
+  padding: 3px 8px;
+  border-radius: 3px;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  margin-top: 4px;
+  white-space: nowrap;
+}
+
+/* ---- CONVO TABLE ---- */
+.convo {
+  margin-top: 16px;
+  border: 1px solid var(--border-dark);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.convo-row {
+  display: grid;
+  grid-template-columns: 80px 1fr 1fr;
+  border-bottom: 1px solid var(--border);
+}
+
+.convo-row:last-child { border-bottom: none; }
+.convo-row.header { background: var(--surface); }
+
+.convo-cell {
+  padding: 10px 14px;
+  font-size: 11px;
+  border-right: 1px solid var(--border);
+  line-height: 1.6;
+}
+
+.convo-cell:last-child { border-right: none; }
+.convo-cell.label { font-size: 9px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); }
+
+.trigger { color: var(--muted); font-style: italic; }
+.ff-says { color: var(--text); }
+.who-user { color: var(--blue); font-weight: 600; font-size: 9px; letter-spacing: 1px; text-transform: uppercase; }
+.who-ff   { color: var(--green); font-weight: 600; font-size: 9px; letter-spacing: 1px; text-transform: uppercase; }
+.who-sys  { color: var(--amber); font-weight: 600; font-size: 9px; letter-spacing: 1px; text-transform: uppercase; }
+
+/* ---- POPUP STATES ---- */
+.states-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.state-card {
+  border: 1px solid var(--border-dark);
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.state-title {
+  font-size: 11px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.state-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.dot-idle    { background: var(--muted-light); }
+.dot-scan    { background: var(--blue); }
+.dot-plan    { background: var(--amber); }
+.dot-run     { background: var(--green); }
+.dot-pause   { background: var(--amber); }
+.dot-done    { background: var(--green); }
+.dot-err     { background: var(--red); }
+
+.state-desc { font-size: 11px; color: var(--muted); line-height: 1.6; margin-bottom: 10px; }
+
+.state-shows {
+  font-size: 10px;
+  color: var(--muted);
+  padding: 8px 10px;
+  background: var(--surface);
+  border-radius: 4px;
+  border: 1px solid var(--border);
+}
+
+.state-shows span { color: var(--text); font-weight: 500; }
+
+/* ---- EDGE CASES ---- */
+.edge-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.edge-card {
+  border: 1px solid var(--border-dark);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.edge-header {
+  background: var(--red-bg);
+  border-bottom: 1px solid #fecaca;
+  padding: 10px 14px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--red);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.edge-body { padding: 14px; }
+
+.edge-scenario { font-size: 11px; color: var(--muted); margin-bottom: 12px; line-height: 1.6; }
+
+.edge-response {
+  border-left: 3px solid var(--green);
+  padding: 8px 12px;
+  background: var(--green-bg);
+  font-size: 11px;
+  color: var(--text);
+  border-radius: 0 4px 4px 0;
+  line-height: 1.6;
+}
+
+.edge-response-title {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--green);
+  margin-bottom: 4px;
+}
+
+/* ---- COMPONENT TABLE ---- */
+.component-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 16px;
+  border: 1px solid var(--border-dark);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.component-table th {
+  background: var(--surface);
+  padding: 10px 14px;
+  text-align: left;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--muted);
+  border-bottom: 1px solid var(--border-dark);
+  border-right: 1px solid var(--border);
+  font-weight: 500;
+}
+
+.component-table th:last-child { border-right: none; }
+
+.component-table td {
+  padding: 10px 14px;
+  font-size: 11px;
+  border-bottom: 1px solid var(--border);
+  border-right: 1px solid var(--border);
+  vertical-align: top;
+  line-height: 1.6;
+}
+
+.component-table td:last-child { border-right: none; }
+.component-table tr:last-child td { border-bottom: none; }
+.component-table tr:hover td { background: var(--surface); }
+
+.comp-name { font-weight: 600; color: var(--text); }
+.comp-tech { color: var(--blue); }
+.comp-status { }
+
+/* ---- RULES BOX ---- */
+.rules-box {
+  border: 1px solid var(--border-dark);
+  border-radius: 8px;
+  overflow: hidden;
+  margin-top: 16px;
+}
+
+.rules-header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 10px 16px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.rule-item {
+  display: flex;
+  gap: 12px;
+  padding: 11px 16px;
+  border-bottom: 1px solid var(--border);
+  font-size: 11px;
+  align-items: flex-start;
+}
+
+.rule-item:last-child { border-bottom: none; }
+
+.rule-icon { flex-shrink: 0; font-size: 14px; margin-top: 1px; }
+.rule-text { color: var(--text); line-height: 1.6; }
+.rule-text strong { font-weight: 600; }
+
+/* ---- CALLOUT ---- */
+.callout {
+  display: flex;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 8px;
+  margin-top: 16px;
+  align-items: flex-start;
+}
+
+.callout.info { background: var(--blue-bg); border: 1px solid #bfdbfe; }
+.callout.warn { background: var(--amber-bg); border: 1px solid #fde68a; }
+.callout.success { background: var(--green-bg); border: 1px solid var(--green-border); }
+
+.callout-icon { font-size: 16px; flex-shrink: 0; }
+.callout-text { font-size: 12px; line-height: 1.6; }
+.callout.info .callout-text { color: #1d4ed8; }
+.callout.warn .callout-text { color: #92400e; }
+.callout.success .callout-text { color: #14532d; }
+
+/* ---- PAGE FOOTER ---- */
+.doc-footer {
+  border-top: 2px solid var(--text);
+  padding: 24px 64px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 10px;
+  color: var(--muted);
+}
+
+.doc-footer strong { color: var(--text); }
+
+@media print {
+  .section { page-break-before: always; }
+  .section:first-child { page-break-before: auto; }
+}
+</style>
+</head>
+<body>
+
+<!-- COVER -->
+<div class="cover">
+  <div>
+    <div class="cover-badge">Product Blueprint · v1.0 · Confidential</div>
+    <div class="cover-title">FileFlow<br>Master Plan</div>
+    <div class="cover-subtitle">Every screen, every conversation, every popup state, and every edge case — before a single line of real code is written.</div>
+  </div>
+  <div class="cover-meta">
+    <strong>Sandiso Mazibuko</strong>
+    Created: Feb 22, 2026<br>
+    Status: Planning Phase<br>
+    Platform: Windows<br>
+    Language: Python + HTML/JS
+  </div>
+</div>
+
+<!-- TOC -->
+<div class="toc">
+  <div>
+    <div class="toc-group-title">User Experience</div>
+    <div class="toc-item"><span class="toc-num">01</span> Full User Journey</div>
+    <div class="toc-item"><span class="toc-num">02</span> Every Screen Defined</div>
+    <div class="toc-item"><span class="toc-num">03</span> Conversation Flows</div>
+  </div>
+  <div>
+    <div class="toc-group-title">The Popup</div>
+    <div class="toc-item"><span class="toc-num">04</span> All 7 Popup States</div>
+    <div class="toc-item"><span class="toc-num">05</span> What Shows When</div>
+    <div class="toc-item"><span class="toc-num">06</span> Controls & Buttons</div>
+  </div>
+  <div>
+    <div class="toc-group-title">Safety & Tech</div>
+    <div class="toc-item"><span class="toc-num">07</span> All 4 Edge Cases</div>
+    <div class="toc-item"><span class="toc-num">08</span> The Golden Rules</div>
+    <div class="toc-item"><span class="toc-num">09</span> Component Map</div>
+  </div>
+</div>
+
+<div class="content">
+
+<!-- SECTION 1 -->
+<div class="section">
+  <div class="section-num">Section 01</div>
+  <div class="section-title">The Full User Journey</div>
+
+  <p>This is the complete path a user takes — from opening FileFlow for the first time, to having a clean, organised file system. Every step is mapped. Nothing is skipped.</p>
+
+  <p>The design goal: a 3rd grader or a grandmother should be able to use this without reading a manual. FileFlow does the thinking. The user just approves.</p>
+
+  <div class="flow">
+    <div class="flow-step">
+      <div class="flow-step-num done">1</div>
+      <div class="flow-step-body">
+        <div class="flow-step-title">Open FileFlow</div>
+        <div class="flow-step-desc">User opens the app. Sees the welcome screen. FileFlow greets them by name and explains itself in one sentence. No jargon.</div>
+      </div>
+      <div class="flow-step-tag">SCREEN: Welcome</div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-step-num done">2</div>
+      <div class="flow-step-body">
+        <div class="flow-step-title">Tell FileFlow what to do (or just click a chip)</div>
+        <div class="flow-step-desc">User types naturally — "clean my downloads" — or clicks one of the quick-start chips. FileFlow understands plain English. No commands.</div>
+      </div>
+      <div class="flow-step-tag">SCREEN: Chat</div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-step-num done">3</div>
+      <div class="flow-step-body">
+        <div class="flow-step-title">FileFlow scouts the folder (READ ONLY)</div>
+        <div class="flow-step-desc">FileFlow scans everything. Nothing moves. It produces a Scout Report showing what it found — totals, categories, nest depth. User sees this before anything happens.</div>
+      </div>
+      <div class="flow-step-tag">SCREEN: Scout Report</div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-step-num done">4</div>
+      <div class="flow-step-body">
+        <div class="flow-step-title">User scopes the job</div>
+        <div class="flow-step-desc">FileFlow asks: "Do you want me to tackle just the job applications first, or everything?" User picks. FileFlow never assumes.</div>
+      </div>
+      <div class="flow-step-tag">SCREEN: Scope Selection</div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-step-num current">5</div>
+      <div class="flow-step-body">
+        <div class="flow-step-title">FileFlow shows the Plan</div>
+        <div class="flow-step-desc">FileFlow lays out exactly what it will do — which files move where, what gets archived, what gets deleted. User reads it like a shopping receipt before paying.</div>
+      </div>
+      <div class="flow-step-tag">SCREEN: Plan Review</div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-step-num warn">6</div>
+      <div class="flow-step-body">
+        <div class="flow-step-title">User approves (or edits) the Plan</div>
+        <div class="flow-step-desc">User clicks "Approve & Run". Or edits specific items. Or cancels. FileFlow will not move a single file until this step is completed.</div>
+      </div>
+      <div class="flow-step-tag">SCREEN: Plan Review</div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-step-num">7</div>
+      <div class="flow-step-body">
+        <div class="flow-step-title">Action Popup opens — FileFlow runs</div>
+        <div class="flow-step-desc">The popup window appears. FileFlow works through the queue in real time. User can watch, pause, or stop at any moment. The chat stays open behind the popup.</div>
+      </div>
+      <div class="flow-step-tag">POPUP: Running</div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-step-num">8</div>
+      <div class="flow-step-body">
+        <div class="flow-step-title">Run completes — Summary shown</div>
+        <div class="flow-step-desc">Popup transitions to a Done state. Shows: files moved, duplicates removed, space freed, time taken. One-click undo available for 24 hours.</div>
+      </div>
+      <div class="flow-step-tag">POPUP: Done</div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-step-num">9</div>
+      <div class="flow-step-body">
+        <div class="flow-step-title">FileFlow reports back in chat</div>
+        <div class="flow-step-desc">Popup closes. FileFlow sends a summary message in the chat. Asks if the user wants to tackle the next chunk, or schedule a recurring cleanup.</div>
+      </div>
+      <div class="flow-step-tag">SCREEN: Chat</div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-step-num">10</div>
+      <div class="flow-step-body">
+        <div class="flow-step-title">User can undo anytime (up to 24h)</div>
+        <div class="flow-step-desc">From the chat, user can say "undo that" and FileFlow restores everything from the archive. Full rollback. No file is permanently lost until the user explicitly clears the archive.</div>
+      </div>
+      <div class="flow-step-tag">SCREEN: Chat</div>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION 2 -->
+<div class="section">
+  <div class="section-num">Section 02</div>
+  <div class="section-title">Every Screen Defined</div>
+
+  <p>FileFlow has 6 distinct screens/states. Each one has a clear job. No screen does two things at once.</p>
+
+  <div class="screens-grid">
+
+    <div class="screen-card">
+      <div class="screen-header">
+        <div class="screen-num">S1</div>
+        <div class="screen-name">Welcome Screen</div>
+        <div class="screen-tag tag-screen">SCREEN</div>
+      </div>
+      <div class="screen-body">
+        <p>Shows on first open and after each completed session. FileFlow introduces itself in one plain sentence. Offers 4 quick-start chips. Nothing else on screen — no clutter, no options, no confusion.</p>
+        <p><strong>User action:</strong> Type a message or click a chip.<br>
+        <strong>FileFlow action:</strong> Move to Scout.</p>
+      </div>
+    </div>
+
+    <div class="screen-card">
+      <div class="screen-header">
+        <div class="screen-num">S2</div>
+        <div class="screen-name">Folder Picker</div>
+        <div class="screen-tag tag-screen">SCREEN</div>
+      </div>
+      <div class="screen-body">
+        <p>If the user doesn't specify a folder, FileFlow asks with a simple folder browser popup. The user clicks their folder — that's it. No typing paths. No confusion.</p>
+        <p><strong>Appears when:</strong> User says "clean my stuff" without specifying where.<br>
+        <strong>FileFlow says:</strong> "Which folder should I look at? Click the 📂 button to pick one."</p>
+      </div>
+    </div>
+
+    <div class="screen-card">
+      <div class="screen-header">
+        <div class="screen-num">S3</div>
+        <div class="screen-name">Scout Report (in chat)</div>
+        <div class="screen-tag tag-screen">SCREEN</div>
+      </div>
+      <div class="screen-body">
+        <p>Appears as a card inside the FileFlow chat bubble. Shows totals, categories as bars, and nest depth. Always read-only — makes clear nothing has moved yet. Big reassurance message underneath.</p>
+        <p><strong>Key message to user:</strong> "I've looked but haven't touched anything yet."<br>
+        <strong>Buttons shown:</strong> Scope options (jobs only / everything).</p>
+      </div>
+    </div>
+
+    <div class="screen-card">
+      <div class="screen-header">
+        <div class="screen-num">S4</div>
+        <div class="screen-name">Plan Review (in chat)</div>
+        <div class="screen-tag tag-screen">SCREEN</div>
+      </div>
+      <div class="screen-body">
+        <p>The most critical screen. Shows every action FileFlow intends to take, grouped by type: CREATE folders, ARCHIVE duplicates, MOVE files, PURGE empty folders. Each item is readable by a non-technical person.</p>
+        <p><strong>Buttons:</strong> Approve & Run / Edit Plan / Cancel.<br>
+        <strong>Rule:</strong> No run can start without explicit approval on this screen.</p>
+      </div>
+    </div>
+
+    <div class="screen-card">
+      <div class="screen-header">
+        <div class="screen-num">S5</div>
+        <div class="screen-name">Action Popup (Running)</div>
+        <div class="screen-tag tag-screen">SCREEN</div>
+      </div>
+      <div class="screen-body">
+        <p>A modal window that opens over the chat when a run starts. Live progress bar, live file counter, scrollable action log (Done / In Progress / Pending). Pause and Stop buttons always visible.</p>
+        <p><strong>Key principle:</strong> User can always stop. FileFlow never locks them out.<br>
+        <strong>Closes:</strong> When user clicks X or run completes.</p>
+      </div>
+    </div>
+
+    <div class="screen-card">
+      <div class="screen-header">
+        <div class="screen-num">S6</div>
+        <div class="screen-name">Run Complete Summary</div>
+        <div class="screen-tag tag-screen">SCREEN</div>
+      </div>
+      <div class="screen-body">
+        <p>Popup transitions to a "Done" state with a clean summary: files moved, duplicates removed, space freed, time taken. Green checkmark. One-click undo button prominent. Option to export the run report.</p>
+        <p><strong>FileFlow says in chat:</strong> Summary + "Want me to tackle the next batch or schedule a weekly cleanup?"</p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- SECTION 3 -->
+<div class="section">
+  <div class="section-num">Section 03</div>
+  <div class="section-title">Conversation Flows</div>
+
+  <p>FileFlow speaks plain English. Here is every message it sends, when it sends it, and what triggers it. These are the exact words the user sees — written for a non-technical person.</p>
+
+  <div class="subsection">
+    <div class="subsection-title">Flow A — Normal Run (Most Common)</div>
+    <div class="convo">
+      <div class="convo-row header">
+        <div class="convo-cell label">Who</div>
+        <div class="convo-cell label">Trigger</div>
+        <div class="convo-cell label">Message / Action</div>
+      </div>
+      <div class="convo-row">
+        <div class="convo-cell who-ff">FileFlow</div>
+        <div class="convo-cell trigger">App opens</div>
+        <div class="convo-cell ff-says">"Hey [Name]. Point me at a folder and I'll figure out the rest — I'll show you what I found and wait for your go-ahead before touching anything."</div>
+      </div>
+      <div class="convo-row">
+        <div class="convo-cell who-user">User</div>
+        <div class="convo-cell trigger">—</div>
+        <div class="convo-cell">"Clean my downloads, there's job applications everywhere"</div>
+      </div>
+      <div class="convo-row">
+        <div class="convo-cell who-ff">FileFlow</div>
+        <div class="convo-cell trigger">User message received</div>
+        <div class="convo-cell ff-says">"Got it. Scanning your Downloads folder now — I'm just looking, nothing moves yet." [Scout Report card appears]</div>
+      </div>
+      <div class="convo-row">
+        <div class="convo-cell who-ff">FileFlow</div>
+        <div class="convo-cell trigger">Scout complete</div>
+        <div class="convo-cell ff-says">"I found 3,241 job application files spread across hundreds of folders. Want me to start with just those, or do you want me to sort everything?" [Buttons: Jobs first / Everything]</div>
+      </div>
+      <div class="convo-row">
+        <div class="convo-cell who-user">User</div>
+        <div class="convo-cell trigger">—</div>
+        <div class="convo-cell">"Yes just the jobs, show me the plan first"</div>
+      </div>
+      <div class="convo-row">
+        <div class="convo-cell who-ff">FileFlow</div>
+        <div class="convo-cell trigger">Scope selected</div>
+        <div class="convo-cell ff-says">"Here's exactly what I'll do. Nothing happens until you say go." [Plan Review card appears] [Buttons: Approve & Run / Edit / Cancel]</div>
+      </div>
+      <div class="convo-row">
+        <div class="convo-cell who-user">User</div>
+        <div class="convo-cell trigger">—</div>
+        <div class="convo-cell">Clicks "Approve & Run"</div>
+      </div>
+      <div class="convo-row">
+        <div class="convo-cell who-sys">System</div>
+        <div class="convo-cell trigger">Approval received</div>
+        <div class="convo-cell">Action popup opens. Run begins.</div>
+      </div>
+      <div class="convo-row">
+        <div class="convo-cell who-ff">FileFlow</div>
+        <div class="convo-cell trigger">Run completes</div>
+        <div class="convo-cell ff-says">"All done! Moved 3,241 files into 89 clean folders. Removed 312 duplicates. Freed up 1.2 GB. Everything is backed up — you can undo this anytime in the next 24 hours. Want me to sort the rest of your Downloads next?"</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="subsection">
+    <div class="subsection-title">Flow B — User Isn't Sure What They Want</div>
+    <div class="convo">
+      <div class="convo-row header">
+        <div class="convo-cell label">Who</div>
+        <div class="convo-cell label">Trigger</div>
+        <div class="convo-cell label">Message / Action</div>
+      </div>
+      <div class="convo-row">
+        <div class="convo-cell who-user">User</div>
+        <div class="convo-cell trigger">—</div>
+        <div class="convo-cell">"I don't know, my laptop is just a mess"</div>
+      </div>
+      <div class="convo-row">
+        <div class="convo-cell who-ff">FileFlow</div>
+        <div class="convo-cell trigger">Vague request</div>
+        <div class="convo-cell ff-says">"No problem — let me take a look and tell you what I see. Which folder should I start with?" [Chips: Downloads / Desktop / Documents / Let me pick]</div>
+      </div>
+      <div class="convo-row">
+        <div class="convo-cell who-user">User</div>
+        <div class="convo-cell trigger">—</div>
+        <div class="convo-cell">Clicks "Downloads"</div>
+      </div>
+      <div class="convo-row">
+        <div class="convo-cell who-ff">FileFlow</div>
+        <div class="convo-cell trigger">Folder selected</div>
+        <div class="convo-cell ff-says">"Scanning now..." [Scout Report appears] "Here's what I found. Where do you want to start — the job applications, or should I tackle the whole thing?"</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="subsection">
+    <div class="subsection-title">Flow C — User Wants to Undo</div>
+    <div class="convo">
+      <div class="convo-row header">
+        <div class="convo-cell label">Who</div>
+        <div class="convo-cell label">Trigger</div>
+        <div class="convo-cell label">Message / Action</div>
+      </div>
+      <div class="convo-row">
+        <div class="convo-cell who-user">User</div>
+        <div class="convo-cell trigger">—</div>
+        <div class="convo-cell">"Actually undo that" / "That was wrong" / clicks Undo button</div>
+      </div>
+      <div class="convo-row">
+        <div class="convo-cell who-ff">FileFlow</div>
+        <div class="convo-cell trigger">Undo requested</div>
+        <div class="convo-cell ff-says">"Sure — I'll put everything back exactly how it was. This will take about [X] seconds." [Confirmation button: Yes, undo it]</div>
+      </div>
+      <div class="convo-row">
+        <div class="convo-cell who-ff">FileFlow</div>
+        <div class="convo-cell trigger">Undo complete</div>
+        <div class="convo-cell ff-says">"Done. Everything is back to how it was before. Want to try a different approach?"</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION 4 -->
+<div class="section">
+  <div class="section-num">Section 04</div>
+  <div class="section-title">All 7 Popup States</div>
+
+  <p>The action popup is the most technically complex part of FileFlow. It must handle 7 distinct states. Each state has a different appearance, different controls, and a different message.</p>
+
+  <div class="states-grid">
+
+    <div class="state-card">
+      <div class="state-title">
+        <div class="state-dot dot-idle"></div>
+        State 1 — Idle / Not Open
+      </div>
+      <div class="state-desc">Popup doesn't exist yet. Chat is full screen. This is the default state before any run is approved.</div>
+      <div class="state-shows"><span>Shows:</span> Nothing. Only the chat.</div>
+    </div>
+
+    <div class="state-card">
+      <div class="state-title">
+        <div class="state-dot dot-scan"></div>
+        State 2 — Preparing
+      </div>
+      <div class="state-desc">Popup opens. FileFlow is doing the final pre-run checks — archiving originals, building the target folder structure. Progress bar at 0%. No files have moved yet.</div>
+      <div class="state-shows"><span>Shows:</span> "Getting ready..." · Progress 0% · No Pause/Stop yet (prep is fast)</div>
+    </div>
+
+    <div class="state-card">
+      <div class="state-title">
+        <div class="state-dot dot-run"></div>
+        State 3 — Running
+      </div>
+      <div class="state-desc">Files are actively moving. Progress bar fills. Live counter shows files moved. Action log scrolls with Done / Running / Pending items. Pause and Stop buttons are active.</div>
+      <div class="state-shows"><span>Shows:</span> Live bar · File counter · Scrollable log · ETA · Pause + Stop</div>
+    </div>
+
+    <div class="state-card">
+      <div class="state-title">
+        <div class="state-dot dot-pause"></div>
+        State 4 — Paused
+      </div>
+      <div class="state-desc">User clicked Pause. Current file finishes safely. Everything else waits. The popup stays open. No data loss. User can resume or stop from here.</div>
+      <div class="state-shows"><span>Shows:</span> "Paused" banner · Resume button · Stop button · Log frozen</div>
+    </div>
+
+    <div class="state-card">
+      <div class="state-title">
+        <div class="state-dot dot-err"></div>
+        State 5 — Stopped Mid-Run
+      </div>
+      <div class="state-desc">User clicked Stop, or an error occurred. FileFlow immediately stops. Shows a clear summary of what was done and what wasn't. Archive is intact. Undo is available.</div>
+      <div class="state-shows"><span>Shows:</span> What completed · What didn't · Undo button · "Continue from here" option</div>
+    </div>
+
+    <div class="state-card">
+      <div class="state-title">
+        <div class="state-dot dot-done"></div>
+        State 6 — Done (Success)
+      </div>
+      <div class="state-desc">All files processed successfully. Popup turns to a green-tinted summary view. Big clear numbers: files moved, duplicates removed, space freed. Undo button is prominent.</div>
+      <div class="state-shows"><span>Shows:</span> ✓ Summary stats · Undo (24h) · Export report · Close button</div>
+    </div>
+
+    <div class="state-card">
+      <div class="state-title">
+        <div class="state-dot dot-err"></div>
+        State 7 — Error
+      </div>
+      <div class="state-desc">Something unexpected happened (e.g. file locked by another program, disk full, permission denied). FileFlow stops safely. Shows exactly which file caused the problem and why, in plain English.</div>
+      <div class="state-shows"><span>Shows:</span> What went wrong (plain English) · What was completed · Undo · Retry option</div>
+    </div>
+
+  </div>
+
+  <div class="callout warn" style="margin-top:20px">
+    <span class="callout-icon">⚠️</span>
+    <div class="callout-text"><strong>Critical rule for all popup states:</strong> The "X" close button and the "Undo" button must be visible in every single state. The user must never feel trapped inside a running process with no way out.</div>
+  </div>
+</div>
+
+<!-- SECTION 5 -->
+<div class="section">
+  <div class="section-num">Section 05 — 07</div>
+  <div class="section-title">All 4 Edge Cases</div>
+
+  <p>You selected all four. Smart — these are the cases that break tools and destroy user trust. Here is how FileFlow handles each one gracefully.</p>
+
+  <div class="edge-grid">
+
+    <div class="edge-card">
+      <div class="edge-header">⚠️ Edge Case 1 — Misidentified File</div>
+      <div class="edge-body">
+        <div class="edge-scenario">FileFlow thinks a file is a job application, but it's actually something else — a personal letter, a contract, a course certificate. It's going to move it to the wrong place.</div>
+        <div class="edge-response">
+          <div class="edge-response-title">How FileFlow handles it</div>
+          Any file below a confidence threshold goes to the Review Queue — never auto-moved. In the Plan Review screen, these appear as yellow "UNCERTAIN" items. User sees: "I'm not sure what this is — can you tell me?" with the filename and a dropdown to classify it. After 3 confirmed corrections, FileFlow learns and never asks again for that pattern.
+        </div>
+      </div>
+    </div>
+
+    <div class="edge-card">
+      <div class="edge-header">💥 Edge Case 2 — Crash Mid-Run</div>
+      <div class="edge-body">
+        <div class="edge-scenario">The computer crashes, power cuts out, or FileFlow itself crashes while in the middle of moving 3,000 files. Half the files moved, half didn't. The user doesn't know what state their system is in.</div>
+        <div class="edge-response">
+          <div class="edge-response-title">How FileFlow handles it</div>
+          Every completed action is written to an audit log in SQLite before the next action starts. On restart, FileFlow reads the log and shows: "It looks like I was interrupted. Here's what completed and what didn't. Want me to continue from where I left off, or undo everything?" Archive is always intact — original files are never deleted until moves are verified.
+        </div>
+      </div>
+    </div>
+
+    <div class="edge-card">
+      <div class="edge-header">🔄 Edge Case 3 — User Changes Mind Halfway</div>
+      <div class="edge-body">
+        <div class="edge-scenario">FileFlow is 60% through a 3,000 file run. The user realises they approved the wrong plan — maybe they wanted to keep a specific employer's files separate, or they don't want the duplicates archived.</div>
+        <div class="edge-response">
+          <div class="edge-response-title">How FileFlow handles it</div>
+          User clicks Pause, then Stop. FileFlow shows: "Stopped at 1,847 of 3,241 files. Here's what was done. You can: (A) undo everything that ran, (B) keep what's done and adjust the plan for the rest, or (C) continue as-is." All three paths are safe. Nothing is permanent until the archive is cleared.
+        </div>
+      </div>
+    </div>
+
+    <div class="edge-card">
+      <div class="edge-header">⚡ Edge Case 4 — Two Runs Conflict</div>
+      <div class="edge-body">
+        <div class="edge-scenario">The user starts a run on Downloads, then accidentally starts another run on the same folder. Or the job application automation system is actively creating files in the same folder FileFlow is reorganising.</div>
+        <div class="edge-response">
+          <div class="edge-response-title">How FileFlow handles it</div>
+          FileFlow places a lightweight lock file in any folder it's currently working on. If a second run tries to touch the same folder, it waits and shows: "Another FileFlow session is already working in this folder. I'll start when it's done." For external programs (like the job automation system), FileFlow detects files modified in the last 60 seconds and skips them automatically, flagging them as "ACTIVE — skipped" in the log.
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- SECTION 6 -->
+<div class="section">
+  <div class="section-num">Section 08</div>
+  <div class="section-title">The Golden Rules</div>
+
+  <p>These rules cannot be broken by any feature, shortcut, or user request. They are the foundation of user trust.</p>
+
+  <div class="rules-box">
+    <div class="rules-header">Non-negotiable rules — baked into the core</div>
+    <div class="rule-item">
+      <div class="rule-icon">🔒</div>
+      <div class="rule-text"><strong>Archive before act.</strong> FileFlow backs up the original state of every file before touching it. A file is only permanently changed after the move is verified AND the user has had 24 hours to undo.</div>
+    </div>
+    <div class="rule-item">
+      <div class="rule-icon">👁️</div>
+      <div class="rule-text"><strong>Show before do.</strong> Every single action must be shown in the Plan Review screen and approved by the user before it runs. No exceptions. No auto-runs. No "trust me".</div>
+    </div>
+    <div class="rule-item">
+      <div class="rule-icon">🚫</div>
+      <div class="rule-text"><strong>Never delete without permission.</strong> FileFlow moves to archive. It never permanently deletes anything unless the user explicitly goes to the archive and says "clear this". Even duplicates go to archive, not trash.</div>
+    </div>
+    <div class="rule-item">
+      <div class="rule-icon">⏸️</div>
+      <div class="rule-text"><strong>Always stoppable.</strong> The user can pause or stop at any moment. FileFlow will finish the current file safely and then stop. The user is never locked out of their own system.</div>
+    </div>
+    <div class="rule-item">
+      <div class="rule-icon">🤔</div>
+      <div class="rule-text"><strong>Uncertain = ask, never guess.</strong> If FileFlow isn't confident about what a file is or where it belongs, it asks. It never makes a guess silently. Uncertain files go to the Review Queue.</div>
+    </div>
+    <div class="rule-item">
+      <div class="rule-icon">🔁</div>
+      <div class="rule-text"><strong>Full undo, always.</strong> Every run produces a complete undo package. One click restores everything to its pre-run state. This remains available for 24 hours after each run.</div>
+    </div>
+    <div class="rule-item">
+      <div class="rule-icon">👵</div>
+      <div class="rule-text"><strong>Plain English only.</strong> No file paths in messages. No technical jargon. No error codes. If something goes wrong, FileFlow says what happened and what to do next, in the simplest possible words.</div>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION 7 -->
+<div class="section">
+  <div class="section-num">Section 09</div>
+  <div class="section-title">Component Map</div>
+
+  <p>Every piece that needs to be built, what it does, what technology powers it, and what order to build it in.</p>
+
+  <table class="component-table">
+    <thead>
+      <tr>
+        <th>Build Order</th>
+        <th>Component</th>
+        <th>What It Does</th>
+        <th>Technology</th>
+        <th>Depends On</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>1</td>
+        <td class="comp-name">Recursive Scanner</td>
+        <td>Walks every folder to any depth. Builds a full file tree in memory. Read only.</td>
+        <td class="comp-tech">Python · pathlib · os.walk</td>
+        <td>—</td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td class="comp-name">Audit Log (SQLite)</td>
+        <td>Records every action taken. Powers undo, crash recovery, and run reports.</td>
+        <td class="comp-tech">Python · sqlite3</td>
+        <td>—</td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td class="comp-name">File Classifier</td>
+        <td>Reads filename, extension, folder path, and content to assign a category. Returns a confidence score.</td>
+        <td class="comp-tech">Python · regex rules · Claude API (fallback)</td>
+        <td>Scanner</td>
+      </tr>
+      <tr>
+        <td>4</td>
+        <td class="comp-name">Entity Extractor</td>
+        <td>Pulls the "who" from a filename — e.g. "John Smith Attorneys". Groups files by employer or origin.</td>
+        <td class="comp-tech">Python · regex · NLP</td>
+        <td>Classifier</td>
+      </tr>
+      <tr>
+        <td>5</td>
+        <td class="comp-name">Duplicate Detector</td>
+        <td>Compares files by hash + timestamp. Labels: ORIGINAL, DUPLICATE, VERSION, UNCERTAIN.</td>
+        <td class="comp-tech">Python · hashlib (MD5)</td>
+        <td>Scanner</td>
+      </tr>
+      <tr>
+        <td>6</td>
+        <td class="comp-name">Plan Builder</td>
+        <td>Takes the classified file tree and produces a structured list of actions. Does not execute.</td>
+        <td class="comp-tech">Python · pure logic</td>
+        <td>Classifier · Entity Extractor · Duplicate Detector</td>
+      </tr>
+      <tr>
+        <td>7</td>
+        <td class="comp-name">Archive Engine</td>
+        <td>Before any move, copies original files to a timestamped archive folder with path metadata logged to SQLite.</td>
+        <td class="comp-tech">Python · shutil · sqlite3</td>
+        <td>Audit Log · Plan Builder</td>
+      </tr>
+      <tr>
+        <td>8</td>
+        <td class="comp-name">Action Engine</td>
+        <td>Executes the approved plan: creates folders, moves files, purges empty directories. Verifies each move before proceeding.</td>
+        <td class="comp-tech">Python · shutil · pathlib</td>
+        <td>Archive Engine · Audit Log</td>
+      </tr>
+      <tr>
+        <td>9</td>
+        <td class="comp-name">Rollback Engine</td>
+        <td>Reads the audit log and restores all files to their original locations from the archive.</td>
+        <td class="comp-tech">Python · sqlite3 · shutil</td>
+        <td>Audit Log · Archive Engine</td>
+      </tr>
+      <tr>
+        <td>10</td>
+        <td class="comp-name">UI — Chat Interface</td>
+        <td>The main window. Chat bubbles, scout report cards, plan review cards, quick chips, input bar.</td>
+        <td class="comp-tech">HTML · CSS · JS (bundled via Pywebview or Electron)</td>
+        <td>All backend components</td>
+      </tr>
+      <tr>
+        <td>11</td>
+        <td class="comp-name">UI — Action Popup</td>
+        <td>The modal window. All 7 states. Live progress bar. Action log. Pause / Stop / Undo controls.</td>
+        <td class="comp-tech">HTML · CSS · JS · WebSocket to Python backend</td>
+        <td>Action Engine · UI Chat</td>
+      </tr>
+      <tr>
+        <td>12</td>
+        <td class="comp-name">Lock Manager</td>
+        <td>Prevents two runs from touching the same folder simultaneously. Detects files modified by external programs in the last 60 seconds and skips them.</td>
+        <td class="comp-tech">Python · file locks</td>
+        <td>Action Engine</td>
+      </tr>
+      <tr>
+        <td>13</td>
+        <td class="comp-name">Review Queue</td>
+        <td>Collects files the classifier is uncertain about. Presents them to the user for manual classification. Learns from corrections.</td>
+        <td class="comp-tech">Python · sqlite3 · UI</td>
+        <td>Classifier · UI</td>
+      </tr>
+      <tr>
+        <td>14</td>
+        <td class="comp-name">Behavior Memory (v2)</td>
+        <td>Learns patterns over time — files to always skip, recurring downloads, user preferences. Asks permission before applying learned behaviors.</td>
+        <td class="comp-tech">Python · sqlite3</td>
+        <td>All of the above</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout success" style="margin-top: 24px">
+    <span class="callout-icon">✅</span>
+    <div class="callout-text"><strong>Recommended build order:</strong> Build components 1–6 first (the brain). Test them in the terminal with no UI. Only then add the UI (10–11) on top. This way, if anything breaks, you know it's a UI problem not a logic problem.</div>
+  </div>
+</div>
+
+</div><!-- /content -->
+
+<div class="doc-footer">
+  <div><strong>FileFlow Master Plan</strong> · v1.0 · Feb 22, 2026</div>
+  <div>Built by Sandiso Mazibuko · Do not share</div>
+  <div>Next step: Build Component 1 — Recursive Scanner</div>
+</div>
+
+</body>
+</html>

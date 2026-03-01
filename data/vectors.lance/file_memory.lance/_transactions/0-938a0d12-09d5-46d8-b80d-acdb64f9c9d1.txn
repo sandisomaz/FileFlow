@@ -1,0 +1,4 @@
+$938a0d12-09d5-46d8-b80d-acdb64f9c9d1²±"	file_path ÿÿÿÿÿÿÿÿÿ*string08$	file_name ÿÿÿÿÿÿÿÿÿ*string08'content_hash ÿÿÿÿÿÿÿÿÿ*string08#category ÿÿÿÿÿÿÿÿÿ*string08#sub_type ÿÿÿÿÿÿÿÿÿ*string08!entity ÿÿÿÿÿÿÿÿÿ*string08"summary ÿÿÿÿÿÿÿÿÿ*string088	embedding ÿÿÿÿÿÿÿÿÿ*fixed_size_list:float:256008%
+indexed_at ÿÿÿÿÿÿÿÿÿ*double08"'
+lance.auto_cleanup.older_than14days"!
+lance.auto_cleanup.interval20

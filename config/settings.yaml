@@ -1,0 +1,100 @@
+system:
+  version: 9.2.0
+  output_folder_prefix: FileFlow_Archive
+  forensic_manifest_name: Forensic_Manifest.json
+
+paths:
+  # Using user directory (~/) makes it portable between computers
+  default_output: "~/Desktop/FileFlow_Archive"
+  reports_folder: reports
+
+scanning:
+  max_depth: 10
+  target_extensions:
+    - .pdf
+    - .docx
+    - .doc
+    - .jpg
+    - .png
+    - .txt
+  ignored_dirs:
+    - .venv
+    - venv
+    - env
+    - __pycache__
+    - .git
+    - node_modules
+    - .vscode
+    - reports
+    - FileFlow_Archive
+    - _legacy_prototypes
+    - BACKUP_V8_OLD
+
+classification:
+  keywords_negative:
+    - statement
+    - invoice
+    - receipt
+    - lease
+    - agreement
+    - contract
+    - payment
+    - ticket
+    - cheque
+    - flyer
+    - udemy
+  known_applicants:
+    - name: Sandiso Mazibuko
+      patterns: [sandiso, mazibuko]
+    - name: Rex Stone
+      patterns: [rex, stone]
+  law_firms:
+    - ENS
+    - WEBBER
+    - BOWMANS
+    - CLIFFE
+    - DEKKER
+    - HOFMEYR
+    - WERKSMANS
+    - NORTON
+    - ROSE
+    - FASKEN
+    - HOGAN
+    - LOVELLS
+    - MACROBERT
+    - ADAMS
+    - SPOOR
+    - FISHER
+    - STRAUSS
+    - DALY
+    - ATTORNEYS
+    - INC
+    - LAW
+
+versioning:
+  format: '{entity}_{subtype}_{date}_v{index}{ext}'
+  date_format: '%Y%m%d'
+  duplicate_suffix: DUP
+  max_filename_length: 200
+
+deduplication:
+  method: content_hash
+  normalize_text: true
+
+execution:
+  dry_run_default: true
+  verify_copies: true
+  atomic_operations: true
+  log_level: INFO
+
+ai:
+  enabled: true
+  ollama_url: http://localhost:11434
+  # Updated to the models you listed
+  slm_model: ministral-3:3b
+  embed_model: qwen3-embedding:4b
+  summarise_model: qwen2.5:3b
+  vision_model: qwen3-vl:4b
+  triage_confidence_threshold: 0.7
+  semantic_dedup_threshold: 0.95
+  vector_store_path: data/vectors.lance

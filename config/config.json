@@ -1,0 +1,170 @@
+{
+  "ignore": {
+    "filenames": [
+      ".ds_store",
+      "thumbs.db",
+      "desktop.ini"
+    ],
+    "extensions": [
+      ".tmp",
+      ".lnk",
+      ".log",
+      ".bak"
+    ],
+    "patterns": [
+      "~\\$",
+      "^\\."
+    ]
+  },
+  "categories": {
+    "Life_Admin": {
+      "priority": 10,
+      "regex_keywords": [
+        "inv-\\d{4,}",
+        "invoice_no_\\d+",
+        "statement",
+        "receipt",
+        "lease",
+        "agreement"
+      ],
+      "extensions": [
+        ".pdf",
+        ".jpg",
+        ".png"
+      ],
+      "description": "Financial records, bills, lease agreements, and administrative documents"
+    },
+    "Professional": {
+      "priority": 11,
+      "keywords": [
+        "cv",
+        "resume",
+        "cover letter",
+        "application",
+        "job",
+        "hiring",
+        "z83",
+        "reference",
+        "brief",
+        "summons"
+      ],
+      "extensions": [
+        ".pdf",
+        ".docx",
+        ".doc"
+      ],
+      "description": "CVs, job applications, legal briefs, and professional correspondence"
+    },
+    "Education": {
+      "priority": 1,
+      "keywords": [
+        "assignment",
+        "homework",
+        "exam",
+        "quiz",
+        "board exam",
+        "memo",
+        "paper",
+        "research",
+        "study"
+      ],
+      "extensions": [
+        ".pdf",
+        ".docx",
+        ".doc",
+        ".pptx"
+      ],
+      "description": "Academic papers, board exams, memorandums, and study materials"
+    },
+    "Development": {
+      "priority": 1,
+      "keywords": [
+        "code",
+        "script",
+        "program",
+        "app",
+        "source"
+      ],
+      "extensions": [
+        ".py",
+        ".js",
+        ".java",
+        ".json",
+        ".yaml"
+      ],
+      "description": "Source code, scripts, and technical project files"
+    },
+    "Images": {
+      "priority": 1,
+      "keywords": [
+        "photo",
+        "image",
+        "picture"
+      ],
+      "extensions": [
+        ".jpg",
+        ".jpeg",
+        ".png",
+        ".webp"
+      ],
+      "description": "Visual media and screenshots"
+    },
+    "Spreadsheets": {
+      "priority": 1,
+      "keywords": [
+        "data",
+        "sheet",
+        "budget",
+        "financial"
+      ],
+      "extensions": [
+        ".xlsx",
+        ".xls",
+        ".csv"
+      ],
+      "description": "Data sets and spreadsheets"
+    },
+    "Documents": {
+      "priority": 0,
+      "keywords": [
+        "document",
+        "letter",
+        "report",
+        "manual",
+        "guide"
+      ],
+      "extensions": [
+        ".pdf",
+        ".docx",
+        ".doc",
+        ".txt",
+        ".rtf"
+      ],
+      "description": "General documents (lower priority)"
+    },
+    "Archives": {
+      "priority": 1,
+      "keywords": [
+        "archive",
+        "backup",
+        "compressed"
+      ],
+      "extensions": [
+        ".zip",
+        ".rar",
+        ".7z",
+        ".tar",
+        ".gz"
+      ],
+      "description": "Compressed and archived files"
+    }
+  },
+  "settings": {
+    "organize_by_date": true,
+    "date_format": "%Y-%m",
+    "handle_duplicates": "rename",
+    "log_moves": true,
+    "scan_depth": 10,
+    "dry_run_default": true
+  }
+}

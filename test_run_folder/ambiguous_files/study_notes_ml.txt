@@ -1,0 +1,7 @@
+LECTURE NOTES: Advanced Machine Learning
+Topic: Convolutional Neural Networks (CNNs)
+Convolutional layers are used to extract spatial features from images.
+Pooling layers reduce the dimensionality of the data.
+Backpropagation is used for training the network.
+Reference: Bishop, 'Pattern Recognition and Machine Learning'.
+Study for the final exam on May 15th.

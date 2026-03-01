@@ -1,4 +1,133 @@
-# FileFlow V8 - Unified System Architecture Map
+# FileFlow System Map — V9 Cognition Engine
+
+## 🏗️ SYSTEM ARCHITECTURE (V9)
+
+```mermaid
+graph TD
+    A[main.py Orchestrator] --> B[Core Services]
+    A --> C[Cognition Stack]
+    
+    subgraph "Core Services"
+        B1[DeepScanner]
+        B2[StagingManager]
+        B3[AtomicExecutor]
+        B4[Janitor/Rollback]
+    end
+    
+    subgraph "Cognition Stack (V9)"
+        C1[Bridge] -->|Ollama API| C2[LLM Backend]
+        C2 --> C3[Judge: Reasoning]
+        C2 --> C4[Inspector: Context]
+        C2 --> C5[Eye: Vision/OCR]
+        C1 --> C6[Memory: Vector DB]
+    end
+
+    B2 --> C3
+    C3 --> B3
+```
+
+---
+
+## 🧠 THE V9 COGNITION STACK
+
+| Component | Responsibility | Model (Benchmark Winner) |
+|---|---|---|
+| **The Bridge** | Unified Ollama interface & reliability layer | `qwen2.5-coder:3b` |
+| **The Judge** | Document classification & legal reasoning | `qwen2.5-coder:3b` |
+| **The Eye** | Vision-based OCR & Image understanding | `llava-phi3:3.8b` |
+| **The Memory** | Semantic storage & Vector search | `qwen3-embedding:4b` |
+| **The Inspector** | Local grounding & Folder context resolution | `qwen2.5:3b` |
+
+---
+
+## 📂 DIRECTORY STRUCTURE
+
+```
+FileFlow/
+├── main.py                          # 🎯 Entry point (orchestrator)
+├── settings.yaml                    # ⚙️ PRIMARY config (AI models, paths)
+├── config.json                      # 📋 SECONDARY config (Categories)
+│
+├── fileflow/
+│   ├── core/                        # 🧠 Essential Logic
+│   │   ├── config.py                # Loader: YAML/JSON merging
+│   │   ├── scanner.py               # Forensic recursive scanner
+│   │   └── logger.py                # Forensic audit logging
+│   │
+│   ├── intelligence/                # 🤖 The AI Brain (V9)
+│   │   ├── bridge.py                # Ollama Reliability Bridge
+│   │   ├── judge.py                 # Decision logic & Rulings
+│   │   ├── inspector.py             # Context propagation logic
+│   │   ├── eye.py                   # Vision & Image analysis
+│   │   ├── memory.py                # Vector DB (LanceDB)
+│   │   ├── extractor.py             # Text/PDF/Image data parsing
+│   │   └── benchmark.py             # Performance testing suite
+│   │
+│   ├── staging/                     # 🎭 Virtual File Reconstruction
+│   │   └── manager.py               # Semantic file clustering
+│   │
+│   ├── operations/                  # ⚡ Physical Actions
+│   │   ├── executor.py              # Atomic file movements
+│   │   ├── janitor.py               # Cleanup & Rollback
+│   │   └── versioning.py            # AI-powered naming
+│   │
+│   └── ui/                          # 🎨 Presentation Layer
+│       ├── dashboard.py             # Rich UI Reports
+│       └── tui.py                   # Interactive TUI
+│
+├── fileflow_data/                   # 🗄️ System state
+│   └── vectors.lance/               # Semantic Memory index
+├── logs/                            # 📝 Forensic Audits
+└── reports/                         # 📈 AI Benchmarks & Audit TXTs
+```
+
+---
+
+## 🔄 V9 EXECUTION PIPELINE
+
+### **Phase 1: Forensic Discovery**
+The `DeepScanner` performs a bit-perfect scan of all source folders, generating hashes and identifying "ghost" or corrupted files before the AI touchs them.
+
+### **Phase 2: Cognition Staging (AI-First)**
+For every file:
+1. **Extraction**: `UnifiedExtractor` pulls raw text/metadata.
+2. **Vision (If Required)**: `Eye` processes images/scans if text is missing.
+3. **Ruling**: `Judge` uses the **Sovereign Archivist** prompt to classify the file.
+4. **Context**: `Inspector` looks at neighboring files to fix grounding errors.
+
+### **Phase 3: Reconstruction (Dry-Run)**
+The system builds a virtual archive in memory. It generates a `Forensic_Manifest.json` and a Rich Dashboard preview for user approval.
+
+### **Phase 4: Atomic Commitment**
+On execution:
+1. Files are copied/moved to the destination.
+2. Every move is MD5-verified for integrity.
+3. If any step fails, the session is flagged for partial roll-back.
+
+---
+
+## 📊 PERFORMANCE STANDARDS (Ryzen 5 5500U)
+
+| Operation | Performance | Bottleneck |
+|---|---|---|
+| **Scanning** | 200+ files/sec | SSD I/O |
+| **Classification** | ~6s per file | CPU Inference |
+| **Embedding** | ~0.5s per file | Token count |
+| **Vision (OCR)** | ~15-45s per file | CPU VRAM |
+
+---
+
+## 🛡️ FORENSIC GUARANTEES
+
+1. **Non-Destructive**: Original files are never touched until a bit-perfect copy is verified at the destination.
+2. **100% Local**: No data leaves the machine. All "thinking" happens via Ollama.
+3. **Audit Trail**: Every file has a MD5 signature tracked from source to destination.
+4. **Full Rollback**: One command reverses any operation using the manifest.
+
+---
+
+**System Status**: ✅ COGNITION ONLINE (V9.2)
+**Last System Update**: 2026-02-19
 
 ## 🏗️ SYSTEM OVERVIEW
 
