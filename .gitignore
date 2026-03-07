@@ -1,0 +1,19 @@
+# Python virtual environment
+.venv/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# FileFlow generated data, logs, and reports
+logs/
+reports/
+fileflow_data/
+*.lance/
+
+# Legacy artifacts that shouldn't be tracked
+_legacy_archive/
+
+# OS-specific files
+.DS_Store
+Thumbs.db

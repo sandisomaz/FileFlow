@@ -1,5 +1,9 @@
 # Task: FileFlow X (10x Leap)
 
+- [x] Final Root Cleanup & Legacy Archival
+- [x] Unify Repository under `main` branch
+- [ ] Synchronize with Private GitHub Repository
+
 - [ ] UI/UX Transformation: The "Laboratory"
     - [ ] Design "Industrial Dark" CSS with high-density components
     - [ ] Replace demo animations with a real-time "Discovery Feed"
