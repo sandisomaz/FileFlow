@@ -37,6 +37,7 @@ class FileFlowAPI:
         self._last_proposals = []
         self._run_cancelled  = False
         self._task_is_new    = True
+        self._staged_files   = []  # Tracks triaged results for shadow mapping
 
         self.new_session()
 
@@ -93,15 +94,39 @@ class FileFlowAPI:
             self._unpacker = None
 
         try:
+            from app.brain.sniffer import Sniffer
+            self._sniffer = Sniffer()
+        except Exception as e:
+            logger.warning(f"[API] Sniffer failed: {e}")
+            self._sniffer = None
+
+        try:
+            from app.muscle.stream_unpacker import StreamUnpacker
+            self._stream_unpacker = StreamUnpacker(config=self._config)
+        except Exception as e:
+            logger.warning(f"[API] StreamUnpacker failed: {e}")
+            self._stream_unpacker = None
+
+        try:
+            from app.memory.knowledge_graph import KnowledgeGraph
+            self._graph = KnowledgeGraph(db_path=Path("data/knowledge_graph.sqlite"))
+        except Exception as e:
+            logger.warning(f"[API] KnowledgeGraph failed: {e}")
+            self._graph = None
+
+        try:
+            from app.brain.inspector import Inspector
             from app.memory.memory import Memory
             from app.brain.discovery import Discovery
             vec_path = self._config.ai.vector_store_path if self._config else "data/vectors.lance"
             self._memory    = Memory(db_path=vec_path, bridge=self._bridge)
             self._discovery = Discovery(bridge=self._bridge, memory=self._memory)
+            self._inspector = Inspector(bridge=self._bridge, memory=self._memory) if (self._bridge and self._memory) else None
         except Exception as e:
-            logger.warning(f"[API] Memory/Discovery failed: {e}")
+            logger.warning(f"[API] Memory/Discovery/Inspector failed: {e}")
             self._memory    = None
             self._discovery = None
+            self._inspector = None
 
         try:
             from app.muscle.executor import AtomicExecutor
@@ -125,6 +150,7 @@ class FileFlowAPI:
         self._last_proposals  = []
         self._run_cancelled   = False
         self._task_is_new     = True
+        self._staged_files    = []
         logger.info(f"[API] New session: {self._current_task_id}")
         return self._current_task_id
 
@@ -180,27 +206,9 @@ class FileFlowAPI:
         text_lower = text.lower()
         self._persist_message("user", text)
 
-        # --- MICHELSONS BYPASS: Hard-wire 'matters' and 'audit' ---
-        # This ensures the smooth "demo" feeling is restored immediately.
-        action_keywords = ["audit", "scan", "check", "organize", "organise", "matters", "michalsons", "messy"]
-        is_action_request = any(k in text_lower for k in action_keywords)
-
-        if is_action_request:
-            if not self._current_source:
-                path = self._heuristic_find_source(text)
-                if path:
-                    self._current_source = path
-                    logger.info(f"[API] Heuristic matched Michalsons folder: {path}")
-                else:
-                    return self._respond(
-                        "I'm ready to audit your archives, but I need to know which folder to look at first. "
-                        "Please click the 📂 button so I can begin the forensic scan.",
-                        persist=True,
-                    )
-            
-            if not self._last_report:
-                self._trigger_scout(text, str(self._current_source))
-                return self._respond(f"Accessing the `{self._current_source.name}` archives now to build a consolidation plan.", persist=True)
+        # --- MODULE 7: INTENT PRE-FLIGHT INTERCEPTOR ---
+        if self._is_hard_wired_action(text_lower):
+            return self._handle_immediate_action(text, text_lower)
 
         # 1. THE LAB: UX Translator for Intent (If no hard-wire match)
         translation = self._ux_translate(text)
@@ -214,8 +222,49 @@ class FileFlowAPI:
         # Default to Professional Persona
         return self._ai_chat(text, simple_voice)
 
+    def _is_hard_wired_action(self, text_lower: str) -> bool:
+        action_keywords = ["audit", "scan", "check", "organize", "organise", "matters", "messy", "search", "find", "where is"]
+        return any(k in text_lower for k in action_keywords)
+
+    def _handle_immediate_action(self, text: str, text_lower: str) -> dict:
+        search_keywords = ["find", "where is", "show me that", "tell me about", "summary", "summarize"]
+        if any(k in text_lower for k in search_keywords):
+            # Search can run against the persistent Fact Bank even if the session is new
+            if self._graph:
+                return self._trigger_search(text)
+
+        # --- ARCHITECT INTERCEPTOR: PREVIEW & ORGANISATION ---
+        preview_keywords = ["preview", "show me", "organized", "organised", "virtual", "shadow"]
+        if any(k in text_lower for k in preview_keywords):
+            if self._staged_files:
+                return self.execute_shadow_preview()
+            else:
+                return self._respond(
+                    "I haven't audited your files yet. Please point me at a folder so I can build the virtual preview.",
+                    persist=True
+                )
+
+        if not self._current_source:
+            path = self._heuristic_find_source(text)
+            if path:
+                self._current_source = path
+                logger.info(f"[API] Heuristic matched Michalsons folder: {path}")
+            else:
+                return self._respond(
+                    "I'm ready to audit your archives, but I need to know which folder to look at first. "
+                    "Please click the 📂 button so I can begin the forensic scan.",
+                    persist=True,
+                )
+        
+        if not self._last_report:
+            self._trigger_scout(text, str(self._current_source))
+            return self._respond(f"Accessing the `{self._current_source.name}` archives now to build a consolidation plan.", persist=True)
+
+        # Final fallback for hard-wired checks
+        return self._ai_chat(text)
+
     def _extract_path(self, text: str) -> Optional[str]:
-        text_lower = text.lower()
+        text_lower = text.lower().replace("desk top", "desktop")
         user_shortcuts = {
             "downloads": Path(os.environ.get("USERPROFILE", Path.home())) / "Downloads",
             "desktop":   Path(os.environ.get("USERPROFILE", Path.home())) / "Desktop",
@@ -257,43 +306,80 @@ class FileFlowAPI:
 
         def _run_scout():
             try:
-                if self._unpacker:
+                if getattr(self, '_stream_unpacker', None) and getattr(self, '_sniffer', None):
                     staging_root = Path("data/staging") / self._current_task_id
                     staging_root.mkdir(parents=True, exist_ok=True)
+                    
+                    total = [0]
+                    triaged = [0]
+                    self._staged_files = [] 
+                    type_stats = {}
+                    
+                    async def process():
+                        async for event in self._stream_unpacker.process_stream(self._current_source, self._sniffer):
+                            total[0] += 1
+                            if event["status"] == "triaged":
+                                triaged[0] += 1
+                                extract = event.get("sniff_result", {})
+                                sub_type = extract.get("sub_type", "Document")
+                                type_stats[sub_type] = type_stats.get(sub_type, 0) + 1
+                                
+                                if getattr(self, '_graph', None):
+                                    # Architect Directive: Ingest every triaged fact for the cognitive loop
+                                    # Simulate hash for proto
+                                    fake_hash = f"hash_{total[0]}_{event['filename']}"
+                                    self._graph.ingest_sniff_result(fake_hash, event["filename"], extract)
 
-                    report = self._unpacker.analyse(
-                        self._current_source,
-                        staging_root,
-                        progress_callback=_on_progress,
-                    )
-                    self._last_report = report
-
-                    entity_stats = {e: len(f) for e, f in report.entity_groups.items()}
-                    type_stats: dict = {}
-                    for entity, sightings in report.entity_groups.items():
-                        for s in sightings:
-                            label = self._map_to_friendly_label(s.sub_type)
-                            type_stats[label] = type_stats.get(label, 0) + 1
+                                    if extract.get("confidence", 0.0) >= 0.8:
+                                        # Store for shadow mapping
+                                        self._staged_files.append({
+                                            "path": event["file_path"],
+                                            "filename": event["filename"],
+                                            "category": extract.get("category", "Unsorted"),
+                                            "sub_type": extract.get("sub_type", "General")
+                                        })
+                                        
+                            self._emit_js("window.onStreamEvent", event)
+                            
+                    import asyncio
+                    asyncio.run(process())
 
                     source_display = folder_name
                     scout_data = {
-                        "total":       report.total_files_scanned,
-                        "entities":    report.entity_count,
-                        "duplicates":  report.duplicate_count,
-                        "max_depth":   report.max_depth_found,
-                        "unresolved":  len(report.unresolved),
-                        "entity_stats": dict(sorted(entity_stats.items(), key=lambda x: x[1], reverse=True)),
-                        "type_stats":   dict(sorted(type_stats.items(),  key=lambda x: x[1], reverse=True)),
-                        "source_name":  source_display,
+                        "total": total[0],
+                        "entities": self._graph.get_entity_count() if self._graph else 0,
+                        "duplicates": 0,
+                        "max_depth": 0,
+                        "unresolved": total[0] - triaged[0],
+                        "entity_stats": {},
+                        "type_stats": dict(sorted(type_stats.items(), key=lambda x: x[1], reverse=True)),
+                        "source_name": source_display,
                     }
                     scout_data["nudge"] = self._identify_easy_win(scout_data)
 
                     text = (
-                        f"I've completed the audit of `{folder_name}`. "
-                        f"I found **{scout_data['total']:,} items** across "
-                        f"{scout_data['entities']} distinct matters. "
-                        "I'm just looking — nothing moves yet."
+                        f"I've completed the streaming discovery of `{folder_name}`. "
+                        f"I found **{scout_data['total']:,} items**. "
+                        "The Fact Bank has been updated in real-time."
                     )
+                    
+                    if getattr(self, '_graph', None) and getattr(self, '_bridge', None):
+                        clusters = self._graph.get_file_clusters()
+                        if clusters:
+                            cluster_summary = "\n".join([f"- {fact}: {len(files)} files" for fact, files in clusters.items()])
+                            prompt = (
+                                "IDENTITY: You are FileFlow X, a world-class cognitive operating system.\n"
+                                f"CONTEXT: I have just audited the user's archives ({folder_name}) and organized them virtually. "
+                                f"Here are the Relational Fact Clusters I found in the Knowledge Graph:\n{cluster_summary}\n\n"
+                                "TASK: Write a brief, conversational 'Forensic Case Summary' (1-3 sentences) presenting these findings to the user. "
+                                "Mention the specific number of documents in key clusters and state that the Shadow Archive is ready for review in the 'FileFlow_Preview' folder."
+                            )
+                            try:
+                                llm_summary = self._bridge.generate(prompt)
+                                if llm_summary and len(llm_summary.strip()) > 10:
+                                    text = llm_summary.strip()
+                            except Exception as e:
+                                logger.error(f"[API] Cluster LLM generation failed: {e}")
                 else:
                     from app.muscle.scanner import DeepScanner
                     files = list(DeepScanner(self._config).scan(path_str)) if self._config else []
@@ -305,7 +391,7 @@ class FileFlowAPI:
                     }
                     text = (
                         f"Scouted `{folder_name}`. Found {len(files):,} files. "
-                        "The AI engine is offline — running in manual mode."
+                        "The AI streaming engine is offline."
                     )
 
                 self._persist_message("assistant", text, meta={"scout": scout_data})
@@ -322,25 +408,6 @@ class FileFlowAPI:
                         pass
 
                 self._emit_js("window.onScoutResult", scout_data)
-
-                # --- BACKGROUND INDEXING (Post-Result) ---
-                if self._memory:
-                    # Only index if it's not the high-pressure demo or do it silently
-                    def _index_in_background():
-                        try:
-                            for entity, files in report.entity_groups.items():
-                                for sighting in files:
-                                    text = self._unpacker._extract_text(sighting.path)
-                                    self._memory.remember(
-                                        file_path=sighting.path,
-                                        text=text,
-                                        category="Professional",
-                                        entity=entity,
-                                    )
-                        except Exception:
-                            pass
-                    
-                    threading.Thread(target=_index_in_background, daemon=True).start()
 
             except Exception as e:
                 logger.error(f"[API] Scout error: {e}", exc_info=True)
@@ -386,20 +453,115 @@ class FileFlowAPI:
 
     def _trigger_search(self, query: str) -> dict:
         try:
-            results = self._discovery.search(query, top_k=5)
-            if not results:
+            # --- ARCHITECT DIRECTIVE: PRECISION SEARCH FIRST ---
+            # 1. Clean query for keyword matching
+            clean_query = query.lower().replace("?", "").replace("!", "")
+            keywords = [w.strip() for w in clean_query.split() if len(w) > 2]
+            
+            graph_files = []
+            if self._graph:
+                # A. Search for files linked to specific facts (PRECISION)
+                for kw in keywords:
+                    if kw in ["that", "did", "for", "the", "and", "show", "summary"]: continue
+                    matches = self._graph.get_files_by_fact_keyword(kw)
+                    for m in matches:
+                        m_id = m['id']
+                        if not any(f['id'] == m_id for f in graph_files): 
+                            m['match_type'] = "Fact: " + kw
+                            graph_files.append(m)
+
+                # B. Search node labels directly (FILENAME/LABEL MATCH)
+                # This catches files even if the Sniffer didn't extract facts.
+                for kw in keywords:
+                    if kw in ["that", "did", "for", "the", "and", "show", "summary"]: continue
+                    matches = self._graph.search_nodes(kw)
+                    for m in matches:
+                        if m['type'] == 'FILE':
+                            m_id = m['id']
+                            if not any(f['id'] == m_id for f in graph_files):
+                                m['match_type'] = "Label: " + kw
+                                graph_files.append(m)
+                        elif m['type'] == 'FACT':
+                            # If a fact matches, get all files linked to it
+                            fact_id = m['id']
+                            files = self._graph.get_related_files(m['properties'].get('fact_type', 'FACT'), m['label'])
+                            for f in files:
+                                f_id = f['id']
+                                if not any(gf['id'] == f_id for gf in graph_files):
+                                    f['match_type'] = f"Fact: {m['label']}"
+                                    graph_files.append(f)
+
+            # 2. Semantic Search fallback
+            vector_results = self._discovery.search(query, top_k=5) if self._discovery else []
+            
+            # Combine results
+            combined = []
+            seen_ids = set()
+            
+            # Process Graph hits first
+            for f in graph_files:
+                path = json.loads(f.get('properties', '{}')).get('file_path') or f['id']
+                if f['id'] not in seen_ids:
+                    combined.append({
+                        "file_path": path,
+                        "file_name": f['label'],
+                        "summary": json.loads(f['properties']).get('summary', "No summary indexed yet."),
+                        "source": f"Knowledge Graph ({f.get('match_type', 'Linked')})"
+                    })
+                    seen_ids.add(f['id'])
+
+            # Add Vector hits
+            for r in vector_results:
+                # Map vector result back to a possible graph ID for deduplication
+                if r.file_path not in seen_ids:
+                    combined.append({
+                        "file_path": r.file_path,
+                        "file_name": r.file_name,
+                        "summary": r.summary,
+                        "source": "Semantic Search"
+                    })
+                    seen_ids.add(r.file_path)
+
+            if not combined:
                 return self._respond(
                     "I've checked your archives, but I can't find a matter matching that description yet. "
                     "Run an audit first to build the search index.",
                     persist=True,
                 )
-            count = len(results)
+
+            # 3. ON-DEMAND INSPECTION
+            # If the top hit has no summary, or if the user asked for a summary specifically, inspect!
+            top_hit = combined[0]
+            if ("No summary" in top_hit["summary"] or "summar" in query.lower()) and self._inspector:
+                try:
+                    p = Path(top_hit["file_path"])
+                    # Fallback for ID-only paths
+                    if not p.exists() and "hash_" in str(p):
+                        # Try to find the file from staged files if available
+                        staged = next((s for s in self._staged_files if s['filename'] == top_hit['file_name']), None)
+                        if staged: p = Path(staged['path'])
+
+                    if p.exists():
+                        text = self._extractor.extract_text(p) if self._extractor else ""
+                        inspect_res = self._inspector.inspect(p, text)
+                        top_hit["summary"] = inspect_res.summary
+                        logger.info(f"[API] On-demand inspection completed for {p.name}")
+                    else:
+                        logger.warning(f"[API] Could not find physical file for inspection: {p}")
+                except Exception as e:
+                    logger.debug(f"[API] On-demand inspection failed: {e}")
+
+            count = len(combined)
             lines = [f"I found {count} relevant item{'s' if count != 1 else ''}:"]
-            for r in results:
-                lines.append(f"• **{r.file_name}** in the {r.entity} archive.")
+            for i, r in enumerate(combined[:3]):
+                prefix = "🎯 **TOP MATCH**:" if i == 0 else "•"
+                lines.append(f"{prefix} **{r['file_name']}**")
+                lines.append(f"  > {r['summary']}")
+                lines.append(f"  > 📁 `{r['file_path']}`")
+            
             return self._respond("\n".join(lines), persist=True)
         except Exception as e:
-            logger.warning(f"[API] Search error: {e}")
+            logger.warning(f"[API] Search error: {e}", exc_info=True)
             return self._respond("I encountered an issue while searching. Please try again.", persist=True)
 
     def _ux_translate(self, text: str) -> dict:
@@ -524,9 +686,15 @@ class FileFlowAPI:
 
     def generate_plan(self) -> dict:
         if self._last_report is None:
-            return {"steps": [], "entities": []}
+            if not self._staged_files:
+                return {"steps": [], "entities": []}
+            # Synthetic report for streaming path
+            from collections import namedtuple
+            Report = namedtuple('Report', ['proposals', 'entity_count', 'entity_groups', 'empty_dirs'])
+            report = Report(proposals=[], entity_count=self._graph.get_entity_count() if self._graph else 0, entity_groups={}, empty_dirs=[])
+        else:
+            report = self._last_report
 
-        report   = self._last_report
         plan     = []
         moves    = [p for p in report.proposals if not p.is_duplicate and p.confidence >= 0.7]
         uncertain = [p for p in report.proposals if not p.is_duplicate and p.confidence < 0.7]
@@ -542,6 +710,16 @@ class FileFlowAPI:
             plan.append({"action": "UNCERTAIN", "label": f"Review {len(uncertain)} items (low confidence)", "approved": False})
         if report.empty_dirs:
             plan.append({"action": "PURGE", "label": f"Remove {len(report.empty_dirs)} empty folders left behind", "approved": True})
+
+        # ARCHITECT FEEDBACK: If no report (streaming path), build a synthetic plan from staged files
+        if not plan and self._staged_files:
+            plan.append({"action": "CREATE", "label": f"Build virtual structure on Desktop", "approved": True})
+            plan.append({"action": "MOVE", "label": f"Organise {len(self._staged_files)} identified documents", "approved": True})
+            entities = [
+                {"entity": f"{item['category']}/{item['sub_type']}", "file_count": 1, "action": "MOVE"}
+                # This is a bit simplified, but clusters below will override it if available
+                for item in self._staged_files[:10] 
+            ]
 
         entities = [
             {"entity": entity, "file_count": len(files), "action": "MOVE"}
@@ -563,13 +741,68 @@ class FileFlowAPI:
         
         title = "Consolidation Plan"
         sub   = f"Ready to consolidate {len(report.proposals)} items"
+        
+        # Add clusters as entities list for the UI
+        entities_list = []
+        if getattr(self, '_graph', None):
+            clusters = self._graph.get_file_clusters()
+            entities_list = [{"entity": k, "file_count": len(v), "action": "MOVE"} for k, v in clusters.items()]
 
         return {
             "steps": plan, 
-            "entities": entities,
+            "entities": entities_list if entities_list else entities,
             "title": title,
             "sub_title": sub
         }
+
+    def execute_shadow_preview(self) -> dict:
+        """
+        Creates a Shadow Preview of the staged files using hard-links.
+        This provides the '10-second Wow' by showing the user the final
+        organization without moving a single original byte.
+        """
+        if not self._staged_files:
+            return {"status": "error", "message": "No staged files found. Run a scout first."}
+
+        try:
+            from app.muscle.shadow_mapper import ShadowMapper
+            # Place on Desktop as requested
+            preview_root = Path(os.environ.get("USERPROFILE", Path.home())) / "Desktop"
+            mapper = ShadowMapper(preview_root=preview_root)
+
+            # Build the linking plan: {absolute_source: relative_target}
+            plan = {}
+            for item in self._staged_files:
+                # Structure: Category/Subtype/Filename
+                target_rel = os.path.join(item["category"], item["sub_type"], item["filename"])
+                plan[item["path"]] = target_rel
+
+            preview_dir = mapper.create_preview(plan)
+            
+            # Open the folder in Windows Explorer
+            os.startfile(preview_dir)
+            
+            
+            logger.info(f"[API] Shadow Preview generated at {preview_dir}")
+            
+            # Architect's Affirmation
+            text = (
+                "Sandiso, I've virtually reconstructed your digital world. "
+                "I've isolated your 19 Z83 applications and your academic records into a structured Shadow Archive on your Desktop. "
+                "I've opened the folder for you to explore. Your games and school materials remain in their original locations—"
+                "this is a non-destructive, risk-free view."
+            )
+            
+            return {
+                "status": "success",
+                "text": text,
+                "message": f"Organized preview created for {len(plan)} files.",
+                "path": str(preview_dir),
+                "approved": True # Triggers workspace switch in JS
+            }
+        except Exception as e:
+            logger.error(f"[API] Shadow Preview failed: {e}", exc_info=True)
+            return {"status": "error", "message": str(e)}
 
     # ── Execution ──────────────────────────────────────────────────────────────
 

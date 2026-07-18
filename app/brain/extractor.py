@@ -32,6 +32,21 @@ class UnifiedExtractor:
         except:
             return ""
 
+    def extract_text(self, path: Path) -> str:
+        """
+        Public entry point for text extraction.
+        Detects file type and routes to the appropriate internal reader.
+        """
+        suffix = path.suffix.lower()
+        try:
+            if suffix == ".pdf":
+                return self._read_pdf_text(path)
+            elif suffix in {".txt", ".csv", ".rtf", ".md"}:
+                return path.read_text(encoding="utf-8", errors="replace")
+            return self._dirty_scrape(path)
+        except Exception:
+            return ""
+
     def extract_metadata(self, text: str = "", file_path: Optional[Path] = None) -> Dict[str, str]:
         """
         Extracts metadata from text.

@@ -17,3 +17,14 @@ _legacy_archive/
 # OS-specific files
 .DS_Store
 Thumbs.db
+
+# Context dumps for LLM analysis
+fileflow_full_system.txt
+*_full_system.txt
+Full_Project_Context.txt
+
+# Temporary local directories
+tmp/
+data/
+__pycache__/
+*.pyc

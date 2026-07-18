@@ -84,7 +84,6 @@
             display: flex;
             flex-direction: column;
             overflow: hidden;
-            transition: width 0.38s var(--spring);
             position: relative;
             z-index: 20;
         }
@@ -503,7 +502,6 @@
             display: flex;
             flex-direction: column;
             overflow: hidden;
-            transition: max-width 0.42s var(--spring);
         }
 
         /* TOPBAR */
@@ -2124,14 +2122,9 @@
                     <div class="ws-sec-sub" id="auditSub">Analysing archive and classifying items</div>
                 </div>
                 <div class="ws-empty">
-                    <div style="display: flex; gap: 8px; margin-bottom: 20px;">
-                        <div class="t-dot" style="width:12px; height:12px; background:var(--text)"></div>
-                        <div class="t-dot" style="width:12px; height:12px; background:var(--text)"></div>
-                        <div class="t-dot" style="width:12px; height:12px; background:var(--text)"></div>
-                    </div>
                     <div class="ws-empty-t" id="auditStatus"
-                        style="font-family:'Geist Mono',monospace; color:var(--text)">Initialising...</div>
-                    <div class="ws-empty-s">The Senior Digital Associate is auditing the archive to build a safe
+                        style="font-family:'Geist Mono',monospace; color:var(--text); margin-top:20px;">Initialising...</div>
+                    <div class="ws-empty-s">FileFlow is auditing the archive to build a safe
                         consolidation plan. This may take a moment.</div>
                 </div>
             </div>
@@ -2151,6 +2144,12 @@
                 <div class="ag" id="planEntitiesGroup">
                     <div class="ag-head">🏢 Entities detected <span class="ag-count" id="planEntityCount">—</span></div>
                     <div id="planEntityRows">
+                        <!-- Dynamically populated -->
+                    </div>
+                </div>
+                <div class="ag" id="planRelGroup">
+                    <div class="ag-head">🧠 Relational Clusters <span class="ag-count" id="planRelCount">—</span></div>
+                    <div id="planRelRows">
                         <!-- Dynamically populated -->
                     </div>
                 </div>
@@ -2981,6 +2980,20 @@ Plan ready. I've laid it all out in the workspace — review every step before a
             }
         };
 
+        window.onStreamEvent = (event) => {
+            const status = document.getElementById('auditStatus');
+            if (status) {
+                if (event.status === 'triaged') {
+                    const conf = event.sniff_result?.confidence || 0;
+                    const cat = event.sniff_result?.category || 'Unknown';
+                    status.textContent = `[${(conf*100).toFixed(0)}%] ${cat} : ${event.filename}`;
+                } else {
+                    status.textContent = `Discovered: ${event.filename}`;
+                }
+            }
+        };
+
+
         function renderScoutCard(scout) {
             const stats = scout.type_stats || {};
             const topStats = Object.entries(stats).slice(0, 4);
@@ -2991,7 +3004,6 @@ Plan ready. I've laid it all out in the workspace — review every step before a
     <div class="scout-card">
         <div class="scout-card-head">
             <span>📊 Audit Summary · ${scout.source_name || 'Archive'}</span>
-            ${(scout.source_name || '').toLowerCase().includes('michalsons') ? '<span class="popia-badge">POPIA Verified</span>' : ''}
         </div>
         <div class="scout-grid">
             <div class="scout-cell">
@@ -3044,8 +3056,8 @@ Plan ready. I've laid it all out in the workspace — review every step before a
     Audit complete. I've grouped these files into ${scout.entities} distinct entities.
     ${cardHtml}
     <div class="bubble-actions" style="margin-top:12px">
-      <button class="btn btn-primary" onclick="requestPlan()">${nudge.label} →</button>
-      <button class="btn btn-ghost" onclick="sendChat()">Tell me more</button>
+      <button class="btn btn-primary" onclick="handleNudge('${nudge.action}')">${nudge.label} →</button>
+      <button class="btn btn-ghost" onclick="sendChat('Tell me more about these clusters')">Tell me more</button>
     </div>`;
 
             // 3. Inject into chat
@@ -3125,35 +3137,87 @@ Done. <strong>${ev.total?.toLocaleString()}</strong> files organised — ${ev.ar
             typingLock = false; setSendDisabled(false);
 
             if (plan && plan.steps) {
-                // Update Workspace Plan Header
-                if (plan.title) document.getElementById('planTitle').textContent = plan.title;
-                if (plan.sub_title) document.getElementById('planSub').textContent = plan.sub_title;
-
                 await appendMsg(`<div class="bubble-label">FileFlow</div>
 Plan ready. Review every step in the workspace before anything runs.
 <span class="ws-link" onclick="openWorkspace('plan')">→ Review Execution Plan</span>`, 'ff');
                 openWorkspace('plan');
 
-                // Populate steps
-                const sRows = document.getElementById('planStepRows');
-                if (sRows) {
-                    sRows.innerHTML = plan.steps.map((s, idx) => `
-    <div class="ar">
-      <div class="ai-icon ico-num">${idx + 1}</div>
-      <div class="ar-info">
-        <div class="ar-name">${s.label}</div>
-        <div class="ar-path">${s.approved ? 'Verified by AI classification logic' : 'Confidence < 70% — Manual review recommended'}</div>
-      </div>
-      <div class="tag tag-${s.action.toLowerCase()}">${s.action}</div>
-    </div>`).join('');
-                    document.getElementById('planStepCount').textContent = `${plan.steps.length} steps`;
-                }
-
-                if (plan.entities) populatePlanFromEntities(plan.entities);
+                renderPlanData(plan);
             } else {
                 await appendMsg(`<div class="bubble-label">FileFlow</div>
 I need to run a scout first. Which folder should I audit?`, 'ff');
             }
+        }
+
+        function renderPlanData(plan) {
+            if (!plan) return;
+            
+            // Update Workspace Plan Header
+            if (plan.title) document.getElementById('planTitle').textContent = plan.title;
+            if (plan.sub_title) document.getElementById('planSub').textContent = plan.sub_title;
+
+            // Populate steps
+            const sRows = document.getElementById('planStepRows');
+            if (sRows && plan.steps) {
+                sRows.innerHTML = plan.steps.map((s, idx) => `
+<div class="ar">
+  <div class="ai-icon ico-num">${idx + 1}</div>
+  <div class="ar-info">
+    <div class="ar-name">${s.label}</div>
+    <div class="ar-path">${s.approved ? 'Verified by AI' : 'Requires Manual Review'}</div>
+  </div>
+  <div class="tag tag-${s.action.toLowerCase()}">${s.action}</div>
+</div>`).join('');
+                document.getElementById('planStepCount').textContent = `${plan.steps.length} steps`;
+            }
+
+            // Populate entities/clusters
+            const eRows = document.getElementById('planRelRows'); // New ID we'll add
+            if (eRows && plan.entities) {
+                eRows.innerHTML = plan.entities.map(e => `
+<div class="ar">
+  <div class="ai-icon ico-file"></div>
+  <div class="ar-info">
+    <div class="ar-name">${e.entity}</div>
+    <div class="ar-path">${e.file_count} documents identified</div>
+  </div>
+  <div class="tag">IDENTIFIED</div>
+</div>`).join('');
+                document.getElementById('planRelCount').textContent = `${plan.entities.length} clusters`;
+            }
+        }
+        async function generateShadowPreview() {
+            if (typingLock) return;
+            typingLock = true; setSendDisabled(true);
+            
+            await appendMsg('Show me the organized preview.', 'user');
+            const typing = showTyping();
+            
+            try {
+                const resp = await API.execute_shadow_preview();
+                typing.remove();
+                
+                if (resp && resp.status === 'success') {
+                    const rendered = (resp.text || resp.message)
+                        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+                        .replace(/`([^`]+)`/g, '<code>$1</code>');
+                        
+                    await appendMsg(`<div class="bubble-label">FileFlow</div>${rendered}`, 'ff');
+                    
+                    // ARCHITECT DIRECTIVE: Auto-switch to Execution Plan and populate it
+                    const plan = await API.generatePlan();
+                    renderPlanData(plan);
+                    openWorkspace('plan');
+                } else {
+                    await appendMsg(`<div class="bubble-label">FileFlow</div>
+                        I encountered an issue generating the preview: ${resp.message}`, 'ff');
+                }
+            } catch (err) {
+                typing.remove();
+                console.error('Shadow Preview error:', err);
+            }
+            
+            typingLock = false; setSendDisabled(false);
         }
 
         function populatePlanFromEntities(entities) {
