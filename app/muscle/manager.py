@@ -238,4 +238,4 @@ class StagingManager:
             with open(output_path, 'w') as f:
                 json.dump(manifest, f, indent=4)
         except Exception as e:
-            print(f"❌ Failed to write manifest: {e}")
+            logger.error(f"Failed to write manifest: {e}")

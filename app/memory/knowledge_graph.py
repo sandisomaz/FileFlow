@@ -199,7 +199,7 @@ class FactBroadcaster:
         self.graph.add_file_node(file_hash, filename)
         fact_id = self.graph.add_fact_node(fact_type, fact_value)
         self.graph.link_nodes(source_id=file_hash, target_id=fact_id, relation=relation, confidence=confidence)
-        logger.info(f"[FactBroadcaster] 📢 Broadcasted {fact_type}: {fact_value} from {filename}")
+        logger.info(f"[FactBroadcaster] Broadcasted {fact_type}: {fact_value} from {filename}")
 
     def query_fact(self, fact_type: str, fact_value: str) -> List[dict]:
         """Worker B checks if a fact is already known in the system."""

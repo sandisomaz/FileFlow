@@ -74,11 +74,11 @@ class ListenerStats:
         uptime = int(self.uptime_seconds())
         mins, secs = divmod(uptime, 60)
         return (
-            f"⏱  Uptime: {mins}m {secs}s | "
-            f"📥 Staged: {self.files_staged} | "
-            f"🧠 Embedded: {self.files_embedded} | "
-            f"⏭  Skipped: {self.files_skipped} | "
-            f"❌ Errors: {self.errors}"
+            f"Uptime: {mins}m {secs}s | "
+            f"Staged: {self.files_staged} | "
+            f"Embedded: {self.files_embedded} | "
+            f"Skipped: {self.files_skipped} | "
+            f"Errors: {self.errors}"
         )
 
 

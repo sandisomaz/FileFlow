@@ -6,9 +6,12 @@ Single source of truth — loads from config/settings.yaml + config/config.json
 import os
 import yaml
 import json
+import logging
 from pathlib import Path
 from typing import Dict, List, Any, Set
 from dataclasses import dataclass, field, fields
+
+logger = logging.getLogger(__name__)
 
 
 # ── Safe dataclass builder ─────────────────────────────────────────────────────
@@ -115,14 +118,14 @@ class ConfigLoader:
                 with open(self.yaml_path, "r") as f:
                     yaml_data = yaml.safe_load(f) or {}
             except Exception as e:
-                print(f"⚠️  Error loading settings.yaml: {e} — using defaults")
+                logger.warning(f"Error loading settings.yaml: {e} — using defaults")
 
         if self.json_path.exists():
             try:
                 with open(self.json_path, "r") as f:
                     json_data = json.load(f)
             except Exception as e:
-                print(f"⚠️  Error loading config.json: {e}")
+                logger.warning(f"Error loading config.json: {e}")
 
         # ── System ─────────────────────────────────────────────────────────────
         self.system = _safe_build(SystemConfig, yaml_data.get("system", {}))
