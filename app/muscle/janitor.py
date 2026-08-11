@@ -134,7 +134,7 @@ class PruneExecutor:
                 while chunk := f.read(8192):
                     md5.update(chunk)
             return md5.hexdigest()
-        except:
+        except Exception:
             return None
     
     def _find_file_by_hash(self, folder: Path, target_hash: str) -> Optional[Path]:
@@ -148,6 +148,6 @@ class PruneExecutor:
                             md5.update(chunk)
                     if md5.hexdigest() == target_hash:
                         return file
-                except:
+                except Exception:
                     continue
         return None

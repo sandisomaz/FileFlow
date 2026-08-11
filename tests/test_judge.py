@@ -6,9 +6,9 @@ import pytest
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-from fileflow.intelligence.judge import Judge, Ruling, VALID_CATEGORIES
-from fileflow.intelligence.bridge import Bridge
-from fileflow.intelligence.extractor import UnifiedExtractor
+from app.brain.judge import Judge, Ruling, VALID_CATEGORIES
+from app.brain.bridge import Bridge
+from app.brain.extractor import UnifiedExtractor
 
 
 def make_judge(bridge_healthy=False, slm_response=None):

@@ -13,6 +13,7 @@ Embeddings: via Ollama (bridge.py)
 
 import hashlib
 import logging
+import re
 import time
 from dataclasses import dataclass
 from pathlib import Path
@@ -204,6 +205,17 @@ class Memory:
         if not self._table:
             return False
         try:
+            # LanceDB's .where() takes a raw predicate string rather than
+            # parameterized bindings, so both values are defensively
+            # validated/escaped before interpolation:
+            #   - content_hash is always our own MD5 hexdigest (see _hash()
+            #     below), so it can only ever be [0-9a-f]{32}; reject
+            #     anything else rather than trust that invariant silently.
+            #   - safe_path is quote-escaped since real filenames can
+            #     legitimately contain a single quote.
+            if not re.fullmatch(r"[0-9a-f]{32}", content_hash or ""):
+                logger.debug(f"[Memory] Rejected malformed content_hash: {content_hash!r}")
+                return False
             safe_path = file_path.replace("'", "''")
             results = (
                 self._table.search()

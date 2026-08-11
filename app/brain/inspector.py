@@ -187,7 +187,8 @@ class Inspector:
     # ── Prompt loading ─────────────────────────────────────────────────────────
 
     def _load_prompt(self):
-        prompt_path = Path("config/prompts/summarize.md")
+        # BUGFIX: was CWD-relative — see judge.py for the same issue.
+        prompt_path = Path(__file__).resolve().parent.parent.parent / "config" / "prompts" / "summarize.md"
         try:
             self._prompt_template = prompt_path.read_text(encoding="utf-8")
         except FileNotFoundError:

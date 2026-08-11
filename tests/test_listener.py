@@ -18,15 +18,15 @@ import pytest
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-from fileflow.intelligence.listener import (
+from app.brain.listener import (
     Listener,
     ListenerEvent,
     ListenerStats,
     WATCHED_EXTENSIONS,
     DEBOUNCE_SECONDS,
 )
-from fileflow.intelligence.bridge import Bridge
-from fileflow.intelligence.inspector import Inspector
+from app.brain.bridge import Bridge
+from app.brain.inspector import Inspector
 
 
 def make_listener(with_inspector=False, with_staging=False):

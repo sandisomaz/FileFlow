@@ -6,9 +6,9 @@ import pytest
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-from fileflow.intelligence.inspector import Inspector, InspectionResult
-from fileflow.intelligence.bridge import Bridge
-from fileflow.intelligence.memory import Memory
+from app.brain.inspector import Inspector, InspectionResult
+from app.brain.bridge import Bridge
+from app.memory.memory import Memory
 
 
 def make_inspector(bridge_healthy=False, slm_response=None, memory_available=False):

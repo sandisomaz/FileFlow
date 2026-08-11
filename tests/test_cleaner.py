@@ -7,9 +7,9 @@ import pytest
 from pathlib import Path
 from unittest.mock import MagicMock
 
-from fileflow.operations.librarian import Librarian, RenameProposal
-from fileflow.operations.executor import AtomicExecutor
-from fileflow.intelligence.bridge import Bridge
+from app.muscle.librarian import Librarian, RenameProposal
+from app.muscle.executor import AtomicExecutor
+from app.brain.bridge import Bridge
 
 
 # =============================================================================

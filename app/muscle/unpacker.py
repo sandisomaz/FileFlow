@@ -302,7 +302,7 @@ class Unpacker:
 
         Example:
             ════════════════════════════════════════
-            UNPACKER ANALYSIS — C:/Users/sandi/Desktop/courses
+            UNPACKER ANALYSIS — C:/Users/<you>/Desktop/courses
             ════════════════════════════════════════
             Scanned:    847 files across 203 directories (max depth: 9)
             Entities:   14 unique document groups found
@@ -478,6 +478,12 @@ class Unpacker:
             mtime = path.stat().st_mtime
         except OSError:
             mtime = datetime.now().timestamp()
+
+        # BUGFIX: `text` was previously referenced below without ever being
+        # assigned, which raised NameError on every call and was silently
+        # swallowed by the broad except blocks — every file was falling
+        # through to "unresolved" no matter what it actually contained.
+        text = self._extract_text(path)
 
         # Step 1: V8 Extractor
         if self.extractor:

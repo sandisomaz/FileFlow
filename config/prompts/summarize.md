@@ -13,7 +13,7 @@ You are the Archivist's Eye. Your job is to read a document excerpt and write a 
 ## Examples
 
 **Good:**
-- `Z83 application by Sandiso Mazibuko for the position of Judge's Secretary, reference HR/4/4/7/56.`
+- `Z83 application by John Doe for the position of Judge's Secretary, reference HR/4/4/7/56.`
 - `FNB bank statement for January 2025, closing balance R12,450.00.`
 - `Lease agreement between Landlord and Tenant for 14 Acacia Street, monthly rental R8,500.`
 - `Study guide for Administrative Law board exam, Part 1 of 3.`

@@ -44,8 +44,8 @@ classification:
     - flyer
     - udemy
   known_applicants:
-    - name: Sandiso Mazibuko
-      patterns: [sandiso, mazibuko]
+    - name: Sample Candidate
+      patterns: [candidate, applicant]
     - name: Rex Stone
       patterns: [rex, stone]
   law_firms:

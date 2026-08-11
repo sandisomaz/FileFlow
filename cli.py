@@ -1,4 +1,3 @@
-
 import sys
 import argparse
 from pathlib import Path
@@ -17,9 +16,11 @@ def main():
     parser.add_argument("action", choices=["audit", "organise"], help="Action to perform")
     parser.add_argument("path", help="Folder path to process")
     parser.add_argument("--dry-run", action="store_true", default=True, help="Don't move files (default: True)")
+    parser.add_argument("--target", "--output-dir", dest="target_dir", default=None, help="Custom destination folder path for organized files")
     
     args = parser.parse_args()
     source = Path(args.path)
+    target_destination = Path(args.target_dir) if args.target_dir else None
     
     if not source.exists() or not source.is_dir():
         print(f"Error: `{source}` is not a valid directory.")
@@ -30,7 +31,7 @@ def main():
     
     # 1. Initialise Engine
     config = ConfigLoader()
-    bridge = Bridge(slm_model=config.ai.slm_model)
+    bridge = Bridge(slm_model=config.ai.slm_model, embed_model=config.ai.embed_model)
     extractor = UnifiedExtractor()
     judge = Judge(bridge=bridge, extractor=extractor)
     unpacker = Unpacker(extractor=extractor, judge=judge)

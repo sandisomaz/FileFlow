@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from typing import Dict, List, Optional
 from collections import Counter
 
-from .types import StagedFile
+from .models import StagedFile
 def forensic_worker(path_str):
     """Deep isolation worker with Soft Repair logic."""
     # Windows Fix: Import inside worker to avoid bootstrapping issues
@@ -45,7 +45,7 @@ def forensic_worker(path_str):
                 if res is not None: return res
                 
         return None
-    except:
+    except Exception:
         return None
 
 class StagingManager:

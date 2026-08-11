@@ -4,7 +4,7 @@ Tests for bridge.py — The AI Connection Layer
 
 import pytest
 from unittest.mock import patch, MagicMock
-from fileflow.intelligence.bridge import Bridge
+from app.brain.bridge import Bridge
 
 
 class TestBridgeHealthCheck:
@@ -58,8 +58,14 @@ class TestBridgeHealthCheck:
 class TestBridgeGenerate:
     def test_returns_none_when_unhealthy(self):
         bridge = Bridge()
-        bridge._healthy = False
-        result = bridge.generate("test prompt")
+        # BUGFIX: setting bridge._healthy = False directly doesn't stick —
+        # is_healthy() checks a cache timestamp (_last_health_check) that
+        # was never set here, so the cache reads as stale and a REAL
+        # network health check runs, which overrides the manual False if
+        # Ollama actually happens to be running (as it was when this was
+        # first run for real). Patch the method itself instead.
+        with patch.object(Bridge, "is_healthy", return_value=False):
+            result = bridge.generate("test prompt")
         assert result is None
 
     def test_returns_text_on_success(self):
@@ -87,8 +93,8 @@ class TestBridgeGenerate:
 class TestBridgeEmbed:
     def test_returns_none_when_unhealthy(self):
         bridge = Bridge()
-        bridge._healthy = False
-        result = bridge.embed("some text")
+        with patch.object(Bridge, "is_healthy", return_value=False):
+            result = bridge.embed("some text")
         assert result is None
 
     def test_returns_embedding_on_success(self):

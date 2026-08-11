@@ -11,7 +11,7 @@ Handles the intelligent routing of files discovered by the StreamUnpacker.
 import logging
 import asyncio
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, AsyncGenerator
 
 logger = logging.getLogger(__name__)
 

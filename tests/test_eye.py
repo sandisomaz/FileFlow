@@ -9,15 +9,15 @@ import pytest
 from pathlib import Path
 from unittest.mock import MagicMock, patch, PropertyMock
 
-from fileflow.intelligence.eye import (
+from app.brain.eye import (
     Eye,
     ImageInspectionResult,
     VisualDedupResult,
     IMAGE_EXTENSIONS,
     IMAGE_CATEGORIES,
 )
-from fileflow.intelligence.bridge import Bridge
-from fileflow.intelligence.memory import Memory
+from app.brain.bridge import Bridge
+from app.memory.memory import Memory
 
 
 def make_eye(

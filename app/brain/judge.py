@@ -36,8 +36,8 @@ _ENTITY_TO_CATEGORY = {
     "Educational_Materials": "Education",
 }
 
-# Valid categories the SLM may return
-VALID_CATEGORIES = {"Professional", "Education", "Development", "Life_Admin", "Waste", "Unknown"}
+# Valid categories the SLM may return (default base set)
+VALID_CATEGORIES = {"Professional", "Education", "Development", "Life_Admin", "Waste", "Unknown", "Images", "Spreadsheets", "Documents", "Archives"}
 
 
 @dataclass
@@ -60,15 +60,35 @@ class Judge:
         ruling = judge.rule(file_path, extracted_text)
     """
 
-    def __init__(self, bridge: Bridge, extractor):
+    def __init__(self, bridge: Bridge, extractor, config=None):
         self.bridge = bridge
         self.extractor = extractor
+        self.config = config
+        self.valid_categories = set(VALID_CATEGORIES)
         self._prompt_template: Optional[str] = None
+        self._load_categories()
         self._load_prompt()
+
+    def _load_categories(self):
+        """Dynamically populates valid categories from config or ConfigLoader."""
+        if self.config and hasattr(self.config, "classification") and self.config.classification.categories:
+            self.valid_categories.update(self.config.classification.categories.keys())
+        else:
+            try:
+                from app.memory.config import ConfigLoader
+                cfg = ConfigLoader()
+                if cfg and cfg.classification and cfg.classification.categories:
+                    self.valid_categories.update(cfg.classification.categories.keys())
+            except Exception as e:
+                logger.debug(f"[Judge] Could not load dynamic categories: {e}")
 
     def _load_prompt(self):
         # Load the ruling prompt template from config/prompts/ruling.md.
-        prompt_path = Path("config/prompts/ruling.md")
+        # BUGFIX: was a CWD-relative path, which silently failed (falling
+        # back to the generic inline prompt) whenever the app was launched
+        # from anywhere other than the repo root — including the frozen
+        # PyInstaller exe main.py is built for.
+        prompt_path = Path(__file__).resolve().parent.parent.parent / "config" / "prompts" / "ruling.md"
         try:
             self._prompt_template = prompt_path.read_text(encoding="utf-8")
             logger.debug(f"[Judge] Loaded ruling prompt from {prompt_path}")
@@ -267,7 +287,7 @@ class Judge:
             try:
                 data = json.loads(match.group())
                 category = data.get("category", "Unknown")
-                if category not in VALID_CATEGORIES:
+                if category not in self.valid_categories:
                     category = self._extract_category_from_prose(cleaned)
                 confidence = float(data.get("confidence", 0.5))
                 confidence = max(0.0, min(1.0, confidence))
@@ -289,14 +309,15 @@ class Judge:
         logger.warning(f"[Judge] SLM response contained no parseable category: {raw[:200]}")
         return None
 
-    @staticmethod
-    def _extract_category_from_prose(text: str) -> str:
+    def _extract_category_from_prose(self, text: str) -> str:
         """
         Scans prose text for any valid category name.
         Used as fallback when models don't output JSON.
         """
         # Direct category name match (case-insensitive)
-        for cat in ("Professional", "Life_Admin", "Education", "Development", "Waste"):
+        for cat in self.valid_categories:
+            if cat == "Unknown":
+                continue
             if re.search(rf"\b{cat}\b", text, re.IGNORECASE):
                 return cat
         # Synonym mapping for common prose patterns

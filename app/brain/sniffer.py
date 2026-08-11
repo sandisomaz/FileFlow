@@ -23,7 +23,7 @@ class SniffResult:
     confidence: float
     category: str
     sub_type: str
-    facts: Dict[str, str] = field(default_factory=dict) # e.g. {"CaseID": "12345", "PersonName": "Sandiso"}
+    facts: Dict[str, str] = field(default_factory=dict) # e.g. {"CaseID": "12345", "PersonName": "John Doe"}
     source: str = "Sniffer (Level 1)"
 
 class Sniffer:

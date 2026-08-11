@@ -18,7 +18,7 @@ Design:
 - Falls back to V8 staging if AI is unavailable
 
 Usage:
-    python main.py "C:\\Users\\sandi\\Desktop\\Downloads" --watch
+    python main.py "C:\\Users\\<you>\\Desktop\\Downloads" --watch
 """
 
 import logging

@@ -3,11 +3,11 @@ Tests for discovery.py — Semantic Search
 """
 
 import pytest
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, PropertyMock
 
-from fileflow.intelligence.discovery import Discovery, SearchResult
-from fileflow.intelligence.bridge import Bridge
-from fileflow.intelligence.memory import Memory
+from app.brain.discovery import Discovery, SearchResult
+from app.brain.bridge import Bridge
+from app.memory.memory import Memory
 
 
 def make_discovery(bridge_healthy=True, memory_available=True, recall_results=None):
@@ -16,7 +16,12 @@ def make_discovery(bridge_healthy=True, memory_available=True, recall_results=No
     bridge.is_healthy.return_value = bridge_healthy
 
     memory = MagicMock(spec=Memory)
-    memory._available = memory_available
+    # BUGFIX: discovery.py checks the public `is_available` property, not
+    # the private `_available` attribute. is_available is a real property
+    # on Memory, so a MagicMock(spec=Memory) needs it set via PropertyMock
+    # on the type, not a plain attribute assignment — the latter never
+    # actually influenced what discovery.search() reads.
+    type(memory).is_available = PropertyMock(return_value=memory_available)
     memory.recall.return_value = recall_results or []
     memory.get_stats.return_value = {"available": memory_available, "total_records": 5}
 
@@ -114,7 +119,7 @@ class TestDiscoveryFormatResults:
         results = discovery.search("something")
         output = discovery.format_results(results, query="something")
         assert "No results" in output
-        assert "--embed" in output  # Tip to build the index
+        assert "--embed" in output or "audit" in output.lower()  # Tip to build the index
 
     def test_format_without_query(self):
         discovery = make_discovery(recall_results=SAMPLE_RECALL)

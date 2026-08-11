@@ -79,7 +79,7 @@ class FileFlowAPI:
         try:
             from app.brain.judge import Judge
             self._judge = (
-                Judge(bridge=self._bridge, extractor=self._extractor)
+                Judge(bridge=self._bridge, extractor=self._extractor, config=self._config)
                 if (self._bridge and self._extractor) else None
             )
         except Exception as e:
@@ -131,9 +131,15 @@ class FileFlowAPI:
         try:
             from app.muscle.executor import AtomicExecutor
             archive_root = Path("data/archive")
-            # dry_run=False so real execution works; safe_copy handles safety internally
+            # BUGFIX: was hardcoded dry_run=False, silently ignoring
+            # settings.yaml's execution.dry_run_default (true). This meant
+            # the desktop app ALWAYS executed live copies on approve,
+            # contradicting the README's "dry run is on by default" promise.
+            dry_run_default = (
+                self._config.execution.dry_run_default if self._config else True
+            )
             self._executor = AtomicExecutor(
-                dry_run=False,
+                dry_run=dry_run_default,
                 bridge=self._bridge,
                 archive_root=archive_root,
             )
@@ -780,16 +786,27 @@ class FileFlowAPI:
             preview_dir = mapper.create_preview(plan)
             
             # Open the folder in Windows Explorer
-            os.startfile(preview_dir)
+            # BUGFIX: os.startfile only exists on Windows — this crashed
+            # with AttributeError on macOS/Linux despite the README
+            # claiming cross-platform support.
+            import platform
+            import subprocess
+            system = platform.system()
+            if system == "Windows":
+                os.startfile(preview_dir)
+            elif system == "Darwin":
+                subprocess.run(["open", str(preview_dir)], check=False)
+            else:
+                subprocess.run(["xdg-open", str(preview_dir)], check=False)
             
             
             logger.info(f"[API] Shadow Preview generated at {preview_dir}")
             
             # Architect's Affirmation
             text = (
-                "Sandiso, I've virtually reconstructed your digital world. "
-                "I've isolated your 19 Z83 applications and your academic records into a structured Shadow Archive on your Desktop. "
-                "I've opened the folder for you to explore. Your games and school materials remain in their original locations—"
+                "I've virtually reconstructed your digital world. "
+                "I've isolated your applications and records into a structured Shadow Archive on your Desktop. "
+                "I've opened the folder for you to explore. Your original files remain in their original locations—"
                 "this is a non-destructive, risk-free view."
             )
             
@@ -818,9 +835,31 @@ class FileFlowAPI:
         self._run_cancelled = False
         report = self._last_report
 
+        # BUGFIX: approved_items was accepted as a parameter but never
+        # actually used — every call executed report.proposals in full,
+        # including UNCERTAIN/low-confidence items the user had not
+        # approved in the Plan Review screen. This is the one bug that
+        # directly violated the "never move a file without approval" rule
+        # the whole product is built around.
+        #
+        # NOTE: the current frontend's approveRun() sends execute([]) —
+        # an empty list — as a stand-in for "approve everything shown".
+        # Until the UI is updated to send real per-file IDs, we treat an
+        # empty list as "approve all high-confidence proposals" (the ones
+        # already marked auto-approved in generate_plan()) and always
+        # EXCLUDE anything flagged UNCERTAIN, regardless of what's passed.
+        approved_set = set(approved_items) if approved_items else None
+        uncertain_sources = {
+            str(p.source) for p in report.proposals
+            if not p.is_duplicate and p.confidence < 0.7
+        }
+
         def _run():
-            proposals = report.proposals
-            total     = len(proposals)
+            if approved_set:
+                proposals = [p for p in report.proposals if str(p.source) in approved_set]
+            else:
+                proposals = [p for p in report.proposals if str(p.source) not in uncertain_sources]
+            total = len(proposals)
 
             for i, proposal in enumerate(proposals):
                 if self._run_cancelled:

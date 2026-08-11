@@ -8,7 +8,7 @@ and some weak/unclassified siblings, it propagates the strong identity to all of
 
 from typing import Dict, List, Optional
 from collections import Counter
-from app.muscle.types import StagedFile
+from app.muscle.models import StagedFile
 
 
 class Refinery:

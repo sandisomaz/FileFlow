@@ -29,7 +29,7 @@ class ShadowMapper:
         
         Args:
             plan: Dict mapping absolute source paths to relative destination paths.
-                  e.g., {"C:/Users/sandi/Downloads/cv.pdf": "Resumes/cv.pdf"}
+                  e.g., {"C:/Users/<you>/Downloads/cv.pdf": "Resumes/cv.pdf"}
                   
         Returns:
             The Path to the preview root directory.

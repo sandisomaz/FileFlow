@@ -27,7 +27,21 @@ sys.path.append(str(APP_ROOT))
 from app.api import FileFlowAPI
 
 app = FastAPI()
-app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
+# Defined here (rather than left in their original spot below) because
+# the CORS middleware below needs them at import time.
+SERVER_HOST = "127.0.0.1"
+SERVER_PORT = 4173
+
+# BUGFIX: was allow_origins=["*"], which lets ANY webpage open in a normal
+# browser tab script requests against this local server. Since this server
+# reads/writes the user's filesystem, wildcard CORS is a real local
+# attack surface, not just a lint warning. Restrict to the app's own origin.
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[f"http://{SERVER_HOST}:{SERVER_PORT}"],
+    allow_methods=["GET", "POST"],
+    allow_headers=["*"],
+)
 
 UI_DIR    = APP_ROOT / "ui"
 ASSETS_DIR = APP_ROOT / "assets"
@@ -35,10 +49,6 @@ ICON_PATH  = ASSETS_DIR / "logo.ico"
 
 if UI_DIR.exists():
     app.mount("/", StaticFiles(directory=str(UI_DIR), html=True), name="ui")
-
-SERVER_HOST = "127.0.0.1"
-SERVER_PORT = 4173
-
 
 def run_background_api():
     """Runs the FastAPI / static-asset server in a daemon thread."""

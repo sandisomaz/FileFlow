@@ -29,7 +29,7 @@ class UnifiedExtractor:
                 reader = pypdf.PdfReader(file)
                 # Just read page 1 (where the Z83 details and CV summary are)
                 return reader.pages[0].extract_text() or ""
-        except:
+        except Exception:
             return ""
 
     def extract_text(self, path: Path) -> str:
@@ -166,9 +166,9 @@ class UnifiedExtractor:
                 data = f.read(250000) # Read first 250KB where most header info lives
                 # Find sequences of text that look like words (4+ printable chars)
                 # We filter for likely meaningful text to avoid garbage
-                tokens = re.findall(b'[A-Za-z0-9/\s-]{4,}', data)
+                tokens = re.findall(rb'[A-Za-z0-9/\s-]{4,}', data)
                 return " ".join([m.decode('ascii', errors='ignore') for m in tokens])
-        except:
+        except Exception:
             return ""
 
     def classify_sub_type(self, path: Path, text: str) -> str:
@@ -186,4 +186,4 @@ class UnifiedExtractor:
         Legacy/Backup extraction from filename.
         Kept for compatibility with fileflow pipeline.
         """
-        return {} 
+        return {}
