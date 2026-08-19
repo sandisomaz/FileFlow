@@ -24,6 +24,8 @@ fileflow_full_system.txt
 Full_Project_Context.txt
 codebase_dump.txt
 codebase_context.txt
+*codebase*.txt
+* codebase.txt
 export_codebase.py
 
 # Secrets & Environment Variables
