@@ -35,18 +35,18 @@ class TestInspectorSummarise:
         assert result.embedded is False
 
     def test_returns_filename_summary_when_no_text(self, tmp_path):
-        f = tmp_path / "cv_sandiso.pdf"
+        f = tmp_path / "cv_candidate.pdf"
         f.write_bytes(b"fake")
         inspector = make_inspector(bridge_healthy=True, slm_response=None)
         result = inspector.inspect(f, text="", category="Professional")
-        assert "Cv Sandiso" in result.summary or "pdf" in result.summary.lower()
+        assert "Cv Candidate" in result.summary or "pdf" in result.summary.lower()
 
     def test_uses_slm_summary_when_available(self, tmp_path):
         f = tmp_path / "z83_application.pdf"
         f.write_bytes(b"fake")
         inspector = make_inspector(
             bridge_healthy=True,
-            slm_response="Z83 application by Sandiso Mazibuko for Judge's Secretary position.",
+            slm_response="Z83 application by Candidate Applicant for Judge's Secretary position.",
             memory_available=False,
         )
         result = inspector.inspect(
@@ -54,7 +54,7 @@ class TestInspectorSummarise:
             text="APPLICATION FOR EMPLOYMENT Z83 FORM. Position: Judge's Secretary.",
             category="Professional",
         )
-        assert "Z83" in result.summary or "Sandiso" in result.summary
+        assert "Z83" in result.summary or "Candidate" in result.summary
 
     def test_slm_summary_is_cleaned(self, tmp_path):
         f = tmp_path / "doc.pdf"

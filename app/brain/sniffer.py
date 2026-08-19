@@ -36,8 +36,8 @@ class Sniffer:
         # Professional/Legal
         self.invoice_regex = re.compile(r"\b(INVOICE|TAX INVOICE|BILL TO)\b", re.IGNORECASE)
         self.legal_ref_regex = re.compile(r"\bREF:\s*([A-Z0-9-]{5,})\b", re.IGNORECASE)
-        self.id_number_regex = re.compile(r"\b(?P<sa_id>\d{13})\b") # SA ID Number rough pattern
-        self.case_number_regex = re.compile(r"\b(\d{1,6}/\d{2,4})\b") # Common SA Case Number format (e.g. 123/2023)
+        self.id_number_regex = re.compile(r"\b(?P<id_number>\d{13})\b") # Generic 13-digit ID number pattern
+        self.case_number_regex = re.compile(r"\b(\d{1,6}/\d{2,4})\b") # Case/Docket Number format (e.g. 123/2023)
         
         # Academia / CV
         self.cv_regex = re.compile(r"\b(CURRICULUM VITAE|RESUME|WORK EXPERIENCE|EDUCATION)\b", re.IGNORECASE)
@@ -54,10 +54,12 @@ class Sniffer:
         facts = {}
         
         # 1. Fact Extraction (These are extracted even if confidence isn't 1.0)
-        # 1a. SA ID Number
+        # 1a. ID Number
         id_match = self.id_number_regex.search(text_to_analyze)
         if id_match:
-            facts["SA_ID"] = id_match.group("sa_id")
+            id_val = id_match.group("id_number")
+            facts["ID_Number"] = id_val
+            facts["SA_ID"] = id_val
 
         # 1b. Case Number Extraction
         case_match = self.case_number_regex.search(text_to_analyze)

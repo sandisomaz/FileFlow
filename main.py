@@ -4,7 +4,10 @@ import threading
 import socket
 import time
 import uvicorn
-import webview
+try:
+    import webview
+except ImportError:
+    webview = None
 import os
 import logging
 import multiprocessing
@@ -27,15 +30,21 @@ sys.path.append(str(APP_ROOT))
 from app.api import FileFlowAPI
 
 app = FastAPI()
-# Defined here (rather than left in their original spot below) because
-# the CORS middleware below needs them at import time.
-SERVER_HOST = "127.0.0.1"
-SERVER_PORT = 4173
+def find_available_port(host: str = "127.0.0.1", start_port: int = 4173, max_attempts: int = 50) -> int:
+    """Finds the first available TCP port to prevent startup crashes from port collisions."""
+    for p in range(start_port, start_port + max_attempts):
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            try:
+                s.bind((host, p))
+                return p
+            except OSError:
+                continue
+    return start_port
 
-# BUGFIX: was allow_origins=["*"], which lets ANY webpage open in a normal
-# browser tab script requests against this local server. Since this server
-# reads/writes the user's filesystem, wildcard CORS is a real local
-# attack surface, not just a lint warning. Restrict to the app's own origin.
+SERVER_HOST = "127.0.0.1"
+SERVER_PORT = find_available_port(SERVER_HOST, 4173)
+
+# Restrict CORS to the actual local host and port
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[f"http://{SERVER_HOST}:{SERVER_PORT}"],

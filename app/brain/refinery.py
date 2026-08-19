@@ -51,11 +51,15 @@ class Refinery:
             by_folder.setdefault(parent, []).append(f)
 
         for folder, files in by_folder.items():
+            from pathlib import Path
+            folder_name = Path(folder).name
+
             # Count strong entity votes in this folder
+            # A vote is strong if it is not in weak_entities and not just the parent folder name
             votes: Counter = Counter()
             for f in files:
                 ent = f.metadata.get("entity")
-                if ent and ent not in self.weak_entities:
+                if ent and ent not in self.weak_entities and ent != folder_name:
                     votes[ent] += 1
 
             if not votes:
@@ -82,13 +86,21 @@ class Refinery:
         staged_files: Dict[str, List[StagedFile]],
         method: str = "Context_Propagated",
     ) -> None:
-        """Applies the winning entity to all weak siblings in the list."""
+        """Applies the winning entity to all weak / folder-fallback siblings in the list."""
         for f in files:
             current_ent = f.metadata.get("entity")
-            if current_ent in self.weak_entities or method == "AI_Ghost_Resolution":
+            folder_name = f.path.parent.name
+            is_weak_or_folder = (
+                current_ent in self.weak_entities
+                or current_ent == folder_name
+                or method == "AI_Ghost_Resolution"
+            )
+            if is_weak_or_folder and current_ent != winning_entity:
                 # Remove from old bucket
                 if current_ent in staged_files and f in staged_files[current_ent]:
                     staged_files[current_ent].remove(f)
+                    if not staged_files[current_ent]:
+                        del staged_files[current_ent]
 
                 # Update metadata
                 f.metadata["entity"] = winning_entity
@@ -115,10 +127,10 @@ class Refinery:
             "'Entity' name (e.g. Company, Person, or Project) that they belong to?\n\n"
             "Files:\n - " + "\n - ".join(filenames[:15]) + "\n\n"
             "Rules:\n"
-            "1. Respond with ONLY the Uppercase Entity Name (e.g. BURGER_HUYSER).\n"
+            "1. Respond with ONLY the Uppercase Entity Name (e.g. ACME_CORP).\n"
             "2. Use underscores for spaces.\n"
             "3. If you cannot tell, respond 'Unknown'.\n"
-            "4. Do not include 'INC' or 'ATTORNEYS' — just the core firm name."
+            "4. Do not include 'INC' or 'CORP' — just the core organization name."
         )
 
         try:

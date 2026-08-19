@@ -9,6 +9,7 @@ Every method here is callable from JS via window.pywebview.api.*
 import os
 import re
 import json
+import uuid
 import logging
 import threading
 import time
@@ -16,7 +17,10 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
-import webview
+try:
+    import webview
+except ImportError:
+    webview = None
 
 logger = logging.getLogger(__name__)
 
@@ -29,6 +33,7 @@ class FileFlowAPI:
 
     def __init__(self, window):
         self._window = window
+        self._lock = threading.Lock()
         self._init_engine()
 
         self._current_task_id: Optional[str] = None
@@ -146,6 +151,13 @@ class FileFlowAPI:
         except Exception as e:
             logger.warning(f"[API] Executor failed: {e}")
             self._executor = None
+
+        try:
+            from app.muscle.transaction_ledger import TransactionLedger
+            self._ledger = TransactionLedger()
+        except Exception as e:
+            logger.warning(f"[API] TransactionLedger failed: {e}")
+            self._ledger = None
 
     # ── Session management ─────────────────────────────────────────────────────
 
@@ -855,43 +867,76 @@ class FileFlowAPI:
         }
 
         def _run():
+            session_id = self._current_task_id or str(uuid.uuid4())
+            if self._ledger:
+                self._ledger.start_transaction(session_id)
+
             if approved_set:
                 proposals = [p for p in report.proposals if str(p.source) in approved_set]
             else:
                 proposals = [p for p in report.proposals if str(p.source) not in uncertain_sources]
             total = len(proposals)
+            manifest_entries = []
 
             for i, proposal in enumerate(proposals):
                 if self._run_cancelled:
+                    if self._ledger:
+                        self._ledger.close_transaction(session_id)
                     self._emit_js("window.onRunEvent", {
                         "type": "stopped", "message": f"Run stopped at {i}/{total}",
                     })
                     return
 
                 success = False
+                op_index = -1
+                file_md5 = ""
                 try:
+                    if self._ledger:
+                        op_index = self._ledger.record_move(
+                            session_id=session_id,
+                            source=proposal.source,
+                            destination=proposal.destination,
+                        )
+
                     if self._executor:
                         # ── SAFE PATH: route through AtomicExecutor ────────────────
                         # This enforces: archive → copy → MD5 verify
-                        # Never a raw shutil.copy2 — that would bypass all safety checks
                         success = self._executor.safe_copy(
                             src=proposal.source,
                             dst=proposal.destination,
                         )
+                        if success:
+                            file_md5 = self._executor._calculate_md5(proposal.destination)
                     else:
-                        # Executor not initialised — log but do not move files
                         logger.warning("[API] Executor unavailable — skipping file move")
                         success = False
 
+                    if self._ledger and success and op_index >= 0:
+                        self._ledger.commit_move(
+                            session_id=session_id,
+                            op_index=op_index,
+                            destination=proposal.destination,
+                        )
+
                     if self._db and success:
                         self._db.log_operation(
-                            task_id=self._current_task_id,
+                            task_id=session_id,
                             original=str(proposal.source),
                             entity=proposal.entity,
                             subtype=getattr(proposal, "sub_type", ""),
-                            md5="",
+                            md5=file_md5,
                             status="MOVED",
                         )
+
+                    if success:
+                        manifest_entries.append({
+                            "original_path": str(proposal.source),
+                            "target_path": str(proposal.destination),
+                            "entity": proposal.entity,
+                            "subtype": getattr(proposal, "sub_type", ""),
+                            "md5": file_md5,
+                            "is_duplicate": proposal.is_duplicate,
+                        })
                 except Exception as e:
                     logger.warning(f"[API] execute proposal error: {e}")
                     success = False
@@ -907,9 +952,31 @@ class FileFlowAPI:
                     "is_dup":  proposal.is_duplicate,
                 })
 
+            if self._ledger:
+                self._ledger.close_transaction(session_id)
+
+            # Export Forensic Manifest
+            try:
+                manifest_data = {
+                    "_meta": {
+                        "session_id": session_id,
+                        "timestamp": datetime.now().isoformat(),
+                        "total_files": total,
+                        "successful_moves": len(manifest_entries),
+                    },
+                    "files": manifest_entries,
+                }
+                staging_dir = Path("data/staging") / session_id
+                staging_dir.mkdir(parents=True, exist_ok=True)
+                manifest_path = staging_dir / "Forensic_Manifest.json"
+                with open(manifest_path, "w", encoding="utf-8") as f:
+                    json.dump(manifest_data, f, indent=4)
+            except Exception as e:
+                logger.warning(f"[API] Failed to export forensic manifest: {e}")
+
             if self._db:
                 try:
-                    self._db.save_task(self._current_task_id, {
+                    self._db.save_task(session_id, {
                         "name":       f"Audit: {self._current_source.name if self._current_source else '?'}",
                         "status":     "done",
                         "progress":   100,
@@ -930,7 +997,8 @@ class FileFlowAPI:
         return {"success": True}
 
     def stop_run(self) -> dict:
-        self._run_cancelled = True
+        with self._lock:
+            self._run_cancelled = True
         return {"stopped": True}
 
     def _emit_js(self, fn_name: str, data):
@@ -943,32 +1011,41 @@ class FileFlowAPI:
     # ── Rollback ───────────────────────────────────────────────────────────────
 
     def run_rollback(self, task_id: str) -> dict:
+        target_id = task_id or self._current_task_id
         try:
+            restored = 0
+            failed = 0
+            rollback_ok = False
+
+            # Strategy 1: TransactionLedger rollback
+            if self._ledger:
+                rollback_ok = self._ledger.rollback(target_id)
+                if rollback_ok:
+                    restored += 1
+
+            # Strategy 2: Janitor manifest rollback if manifest exists
             from app.muscle.janitor import PruneExecutor
             janitor  = PruneExecutor(dry_run=False)
-            staging  = Path("data/staging") / (task_id or self._current_task_id)
+            staging  = Path("data/staging") / target_id
             manifest = staging / "Forensic_Manifest.json"
 
             if manifest.exists():
-                result = janitor.rollback_run(manifest)
-                msg = (
-                    f"Rollback complete. "
-                    f"{result.get('restored', 0)} files restored, "
-                    f"{result.get('failed', 0)} failed."
-                )
-            else:
-                msg = "Rollback complete. Files restored to their original positions."
+                res = janitor.rollback_run(manifest)
+                restored = max(restored, res.get("restored", 0))
+                failed = res.get("failed", 0)
+                rollback_ok = rollback_ok or (restored > 0)
 
             if self._db:
                 try:
-                    self._db.save_task(task_id or self._current_task_id, {
+                    self._db.save_task(target_id, {
                         "status":     "rolled_back",
                         "created_at": datetime.now().isoformat(),
                     })
                 except Exception:
                     pass
 
-            return {"status": "success", "message": msg}
+            msg = f"Rollback complete. Restored files to their original positions."
+            return {"status": "success", "message": msg, "restored": restored, "failed": failed}
         except Exception as e:
             logger.error(f"[API] Rollback error: {e}")
             return {"status": "error", "message": f"Rollback encountered an issue: {e}"}

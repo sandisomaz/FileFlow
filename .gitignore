@@ -18,10 +18,20 @@ _legacy_archive/
 .DS_Store
 Thumbs.db
 
-# Context dumps for LLM analysis
+# Context dumps & Helper Scripts
 fileflow_full_system.txt
 *_full_system.txt
 Full_Project_Context.txt
+codebase_dump.txt
+codebase_context.txt
+export_codebase.py
+
+# Secrets & Environment Variables
+.env
+.env.*
+*.key
+*.pem
+*.secret
 
 # Temporary local directories
 tmp/

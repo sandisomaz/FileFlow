@@ -46,8 +46,6 @@ classification:
   known_applicants:
     - name: Sample Candidate
       patterns: [candidate, applicant]
-    - name: Rex Stone
-      patterns: [rex, stone]
   law_firms:
     - ENS
     - WEBBER

@@ -50,31 +50,33 @@ class TransactionLedger:
             logger.error(f"[Ledger] Error computing MD5 for {file_path}: {e}")
             return ""
 
-    def start_transaction(self) -> str:
-        session_id = str(uuid.uuid4())
+    def start_transaction(self, session_id: str = None) -> str:
+        session_id = session_id or str(uuid.uuid4())
         ledger = self._read_ledger()
-        ledger[session_id] = {
-            "timestamp": datetime.now().isoformat(),
-            "status": "in_progress",
-            "operations": []
-        }
-        self._write_ledger(ledger)
-        logger.info(f"[Ledger] Started Transaction Session: {session_id}")
+        if session_id not in ledger:
+            ledger[session_id] = {
+                "timestamp": datetime.now().isoformat(),
+                "status": "in_progress",
+                "operations": []
+            }
+            self._write_ledger(ledger)
+            logger.info(f"[Ledger] Started Transaction Session: {session_id}")
         return session_id
 
-    def record_move(self, session_id: str, source: Path, destination: Path) -> bool:
+    def record_move(self, session_id: str, source: Path, destination: Path) -> int:
         """
         Records the intent to move a file, calculates its original hash.
-        This is called PRE-move.
+        Returns the operation index in the transaction, or -1 on error.
         """
         source_hash = self._compute_md5(source)
         if not source_hash:
             logger.error(f"[Ledger] Source missing or unreadable: {source}")
-            return False
+            return -1
 
         ledger = self._read_ledger()
         if session_id not in ledger:
-            return False
+            self.start_transaction(session_id)
+            ledger = self._read_ledger()
 
         operation = {
             "op_id": str(uuid.uuid4()),
@@ -82,13 +84,14 @@ class TransactionLedger:
             "source_path": str(source.absolute()),
             "source_md5": source_hash,
             "destination_path": str(destination.absolute()),
-            "dest_md5": None, # Filled post-move
+            "dest_md5": None,  # Filled post-move
             "status": "pending"
         }
         
         ledger[session_id]["operations"].append(operation)
+        op_index = len(ledger[session_id]["operations"]) - 1
         self._write_ledger(ledger)
-        return True
+        return op_index
 
     def commit_move(self, session_id: str, op_index: int, destination: Path) -> bool:
         """

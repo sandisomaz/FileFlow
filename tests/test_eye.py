@@ -95,7 +95,7 @@ class TestEyeClassification:
 
     def test_classifies_certificate_from_ocr(self, tmp_path):
         eye = make_eye(tesseract=False)
-        ocr_text = "UNIVERSITY OF PRETORIA\nHEREBY CERTIFY that this certificate is awarded to\nSandiso Mazibuko"
+        ocr_text = "UNIVERSITY OF PRETORIA\nHEREBY CERTIFY that this certificate is awarded to\nJane Doe"
         category = eye._classify_image(tmp_path / "cert.jpg", ocr_text)
         assert category == "Certificate"
 

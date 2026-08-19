@@ -50,7 +50,7 @@ class TestClassifySubType:
         assert self.extractor.classify_sub_type(path, text) == "CV"
 
     def test_cv_detected_from_filename(self):
-        path = Path("CV_Sandiso_Mazibuko.pdf")
+        path = Path("CV_Candidate_Profile.pdf")
         assert self.extractor.classify_sub_type(path, text="") == "CV"
 
     def test_cover_letter_detected_from_content(self):
@@ -104,7 +104,7 @@ class TestExtractFromFilename:
 
     def test_currently_returns_empty_dict(self):
         result = self.extractor.extract_from_filename(
-            "Sandiso_Mazibuko_Application_for_Judges_Secretary_at_Office.pdf"
+            "Candidate_Application_for_Judges_Secretary_at_Office.pdf"
         )
         assert result == {}, (
             "extract_from_filename() changed from its documented stub "

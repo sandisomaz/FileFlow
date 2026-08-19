@@ -34,7 +34,7 @@ def test_unbucketing_logic():
     REPUBLIC OF SOUTH AFRICA
     Position for which you are applying: LEGAL ADMIN OFFICER
     Reference number: HR4/4/7/210
-    Surname and Full names: MAZIBUKO SANDISO
+    Surname and Full names: DOE JANE
     """
 
     staging = StagingManager(extractor)
@@ -53,32 +53,6 @@ def test_unbucketing_logic():
     assert "in_a_government" not in staging.staged_files
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "FINDING, not a stale-test fix: this test asserts that a sibling "
-        "file in the same folder as a strongly-identified file (one with "
-        "a real Reference Number) gets swept into that same entity by "
-        "folder-context propagation. Tracing the current code: "
-        "StagingManager.stage_file() assigns an unmatched file's entity "
-        "to its parent folder name (e.g. 'bucket'), not a generic marker "
-        "like 'Unknown'. Refinery.refine() only propagates a strong "
-        "sibling's entity onto files whose CURRENT entity is in its "
-        "weak_entities allowlist: "
-        "['INTERNSHIP_DEMO_SOURCE', 'Unclassified_Recovery', 'Unknown', "
-        "'_Quarantine']. A real folder name like 'bucket' isn't on that "
-        "list, so no propagation happens — the sibling stays under its "
-        "own folder-name entity instead of joining the Reference Number "
-        "group. This looks like a real capability gap for a 'forensic "
-        "recovery' tool (grouping ambiguous siblings with a confidently-"
-        "identified neighbor is exactly the kind of thing this tool "
-        "should do), not intentionally-tightened safety behavior. "
-        "Needs a decision: either broaden weak_entities' matching logic "
-        "(e.g. treat any non-explicit, folder-derived entity as weak), "
-        "or confirm this was deliberately restricted and update this "
-        "test to assert the restriction on purpose."
-    ),
-)
 def test_sibling_packet_reassociation():
     """
     Two files in the same folder: one has a findable Reference Number in

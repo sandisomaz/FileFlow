@@ -317,9 +317,9 @@ class Unpacker:
         """
         lines = [
             "",
-            "═" * 60,
-            f"UNPACKER ANALYSIS — {report.source_root.name}",
-            "═" * 60,
+            "=" * 60,
+            f"UNPACKER ANALYSIS - {report.source_root.name}",
+            "=" * 60,
             f"Scanned:    {report.total_files_scanned} files across "
             f"{report.total_dirs_scanned} directories "
             f"(max depth: {report.max_depth_found})",
@@ -327,7 +327,7 @@ class Unpacker:
             f"Proposals:  {report.proposal_count} moves proposed",
             f"Duplicates: {report.duplicate_count} "
             f"({int(report.duplicate_count / max(report.proposal_count, 1) * 100)}%) "
-            f"— will be versioned as DUP",
+            f"- will be versioned as DUP",
             f"Unresolved: {len(report.unresolved)} files couldn't be classified",
         ]
 
@@ -360,7 +360,7 @@ class Unpacker:
             lines.append("")
             lines.append(f"EMPTY DIRS TO CLEAN: {len(report.empty_dirs)}")
 
-        lines.append("═" * 60)
+        lines.append("=" * 60)
         lines.append("")
         return "\n".join(lines)
 
@@ -570,9 +570,9 @@ class Unpacker:
         """
         Last-resort entity extraction from the filename itself.
         Handles patterns like:
-        - CV_Rex_Stone_for_John_Smith_Attorneys.pdf
-        - Application_Judges_Secretary_2024.pdf
-        - WERKSMANS_CoverLetter.pdf
+        - CV_Applicant_for_Acme_Corp.pdf
+        - Application_Office_Manager_2024.pdf
+        - ACME_CoverLetter.pdf
         """
         stem = path.stem.upper()
 
